@@ -127,9 +127,9 @@ export class RandomizerBlock extends Module implements PageBlock {
     if (this.tag?.roundNumberFontColor)
       this.style.setProperty('--colors-primary-main', this.tag.roundNumberFontColor);
     if (this.tag?.winningNumberFontColor)
-      this.style.setProperty('--colors-warning-contrast_text', this.tag.roundNumberFontColor);
+      this.style.setProperty('--colors-warning-contrast_text', this.tag.winningNumberFontColor);
     if (this.tag?.winningNumberBackgroundColor)
-      this.style.setProperty('--colors-warning-main', this.tag.roundNumberFontColor);
+      this.style.setProperty('--colors-warning-main', this.tag.winningNumberBackgroundColor);
     if (this.tag?.nextDrawFontColor)
       this.style.setProperty('--text-secondary', this.tag.nextDrawFontColor);
   }
