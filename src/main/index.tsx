@@ -93,7 +93,7 @@ export class RandomizerBlock extends Module implements PageBlock {
       this.lbRound.lineHeight = '1.758rem';
       this.lbDrawTime.font={size: '1.5rem', weight: 500, color: Theme.colors.primary.main};
       this.lbDrawTime.lineHeight = '1.758rem';
-      if (this._data.round && this._data.numberOfValues && this._data.from && this._data.to) {
+      if (this._data.round && this._data.numberOfValues) {
         const result = await getRandomizerResult(this._data.round, this._data.numberOfValues, this._data.from, this._data.to);
         this.gridResults.clearInnerHTML();
         for (let value of result) {
