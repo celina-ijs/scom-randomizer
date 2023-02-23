@@ -51,17 +51,18 @@ export class RandomizerBlock extends Module implements PageBlock {
     if (this._data.releaseTime) {
       this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
     }
-    if (!this._data.round) {
+    if (!this._data.round && this._data.releaseTime) {
       this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
     }
     await this.refreshApp();
   }
 
   async refreshApp() {
-    this.lbRound.caption = this._data.round.toString();
-    this.lbDrawTime.caption = moment(Number(this._data.releaseTime)).format('MMM DD, YYYY, h:mm A')
+    this.lbRound.caption = this._data.round?.toString() || '';
+    this.lbDrawTime.caption = this._data.releaseTime ?
+      moment(Number(this._data.releaseTime)).format('MMM DD, YYYY, h:mm A') : '';
     this.gridResults.clearInnerHTML();
-    if (Number(this._data.releaseTime) > new Date().getTime()) {
+    if (this._data.releaseTime && Number(this._data.releaseTime) > new Date().getTime()) {
       this.hstackResult.visible = false;
       this.lbRound.font={size: '2rem', weight: 500, color: Theme.colors.primary.main};
       this.lbRound.lineHeight = '2.637rem';
@@ -92,21 +93,23 @@ export class RandomizerBlock extends Module implements PageBlock {
       this.lbRound.lineHeight = '1.758rem';
       this.lbDrawTime.font={size: '1.5rem', weight: 500, color: Theme.colors.primary.main};
       this.lbDrawTime.lineHeight = '1.758rem';
-      const result = await getRandomizerResult(this._data.round, this._data.numberOfValues, this._data.from, this._data.to);
-      this.gridResults.clearInnerHTML();
-      for (let value of result) {
-        let label = await Label.create({
-          class: 'random-number',
-          display: 'inline-flex',
-          font: { size: '2rem', bold: true, color: Theme.colors.warning.contrastText },
-          border: {radius: '5px'},
-          background: {color: Theme.colors.warning.main},
-          width: 54.8,
-          height: 54.8,
-          caption: value
-        })
-        this.gridResults.append(label)
-      }
+      if (this._data.round && this._data.numberOfValues && this._data.from && this._data.to) {
+        const result = await getRandomizerResult(this._data.round, this._data.numberOfValues, this._data.from, this._data.to);
+        this.gridResults.clearInnerHTML();
+        for (let value of result) {
+          let label = await Label.create({
+            class: 'random-number',
+            display: 'inline-flex',
+            font: { size: '2rem', bold: true, color: Theme.colors.warning.contrastText },
+            border: {radius: '5px'},
+            background: {color: Theme.colors.warning.main},
+            width: 54.8,
+            height: 54.8,
+            caption: value
+          })
+          this.gridResults.append(label)
+        }
+        }
     }
   }
 
