@@ -35,7 +35,8 @@ export class RandomizerBlock extends Module implements PageBlock {
   private lbReleasedHours: Label;
   private lbReleasedMins: Label;
   private timer: any;
-  private oldTag: any;
+  private oldTag: any = {};
+  tag: any = {};
 
   async init() {
     super.init();
@@ -118,23 +119,27 @@ export class RandomizerBlock extends Module implements PageBlock {
   }
 
   async setTag(value: any) {
-    this.tag = value;
+    const newValue = value || {};
+    for (let prop in newValue) {
+      if (newValue.hasOwnProperty(prop))
+        this.tag[prop] = newValue[prop];
+    }
     this.updateTheme();
   }
 
+  private updateStyle(name: string, value: any) {
+    value ?
+      this.style.setProperty(name, value) :
+      this.style.removeProperty(name);
+  }
+
   private updateTheme() {
-    if (this.tag?.fontColor)
-      this.style.setProperty('--text-primary', this.tag.fontColor);
-    if (this.tag?.backgroundColor)
-      this.style.setProperty('--background-main', this.tag.backgroundColor);
-    if (this.tag?.roundNumberFontColor)
-      this.style.setProperty('--colors-primary-main', this.tag.roundNumberFontColor);
-    if (this.tag?.winningNumberFontColor)
-      this.style.setProperty('--colors-warning-contrast_text', this.tag.winningNumberFontColor);
-    if (this.tag?.winningNumberBackgroundColor)
-      this.style.setProperty('--colors-warning-main', this.tag.winningNumberBackgroundColor);
-    if (this.tag?.nextDrawFontColor)
-      this.style.setProperty('--text-secondary', this.tag.nextDrawFontColor);
+    this.updateStyle('--text-primary', this.tag?.fontColor);
+    this.updateStyle('--background-main', this.tag?.backgroundColor);
+    this.updateStyle('--colors-primary-main', this.tag?.roundNumberFontColor);
+    this.updateStyle('--colors-warning-contrast_text', this.tag?.winningNumberFontColor);
+    this.updateStyle('--colors-warning-main', this.tag?.winningNumberBackgroundColor);
+    this.updateStyle('--text-secondary', this.tag?.nextDrawFontColor);
   }
 
   getActions() {
@@ -145,7 +150,7 @@ export class RandomizerBlock extends Module implements PageBlock {
         command: (builder: any, userInputData: any) => {
           return {
             execute: async () => {
-              this._oldData = this._data;
+              this._oldData = {...this._data};
               if (userInputData.releaseUTCTime != undefined) {
                 this._data.releaseUTCTime = userInputData.releaseUTCTime;
                 this._data.releaseTime = moment.utc(this._data.releaseUTCTime).valueOf().toString();
@@ -159,9 +164,13 @@ export class RandomizerBlock extends Module implements PageBlock {
               if (userInputData.to != undefined) this._data.to = userInputData.to;
               this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
               await this.refreshApp();
+              if (builder?.setData) builder.setData(this._data);
             },
-            undo: () => {
-              this._data = this._oldData;
+            undo: async () => {
+              this._data = {...this._oldData};
+              this._data.round = this._data.releaseTime ? await getRoundByReleaseTime(Number(this._data.releaseTime)) : 0;
+              await this.refreshApp();
+              if (builder?.setData) builder.setData(this._data);
             },
             redo: () => {}
           }
@@ -195,17 +204,16 @@ export class RandomizerBlock extends Module implements PageBlock {
         command: (builder: any, userInputData: any) => {
           return {
             execute: async () => {
-              if (userInputData) {
-                this.oldTag = this.tag;
-                this.setTag(userInputData);
-                if (builder) builder.setTag(userInputData);
-              }
+              if (!userInputData) return;
+              this.oldTag = {...this.tag};
+              if (builder) builder.setTag(userInputData);
+              this.setTag(userInputData);
             },
             undo: () => {
-              if (userInputData) {
-                this.setTag(this.oldTag);
-                if (builder) builder.setTag(this.oldTag);
-              }
+              if (!userInputData) return;
+              this.tag = {...this.oldTag};
+              if (builder) builder.setTag(this.tag);
+              this.setTag(this.tag);
             },
             redo: () => {}
           }
