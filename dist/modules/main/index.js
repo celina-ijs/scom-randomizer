@@ -96,6 +96,8 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
             super(...arguments);
             this._oldData = {};
             this._data = {};
+            this.oldTag = {};
+            this.tag = {};
         }
         async init() {
             super.init();
@@ -174,23 +176,27 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
             return this.tag;
         }
         async setTag(value) {
-            this.tag = value;
+            const newValue = value || {};
+            for (let prop in newValue) {
+                if (newValue.hasOwnProperty(prop))
+                    this.tag[prop] = newValue[prop];
+            }
+            console.log('set tag', this.tag, this.oldTag);
             this.updateTheme();
+        }
+        updateStyle(name, value) {
+            value ?
+                this.style.setProperty(name, value) :
+                this.style.removeProperty(name);
         }
         updateTheme() {
             var _a, _b, _c, _d, _e, _f;
-            if ((_a = this.tag) === null || _a === void 0 ? void 0 : _a.fontColor)
-                this.style.setProperty('--text-primary', this.tag.fontColor);
-            if ((_b = this.tag) === null || _b === void 0 ? void 0 : _b.backgroundColor)
-                this.style.setProperty('--background-main', this.tag.backgroundColor);
-            if ((_c = this.tag) === null || _c === void 0 ? void 0 : _c.roundNumberFontColor)
-                this.style.setProperty('--colors-primary-main', this.tag.roundNumberFontColor);
-            if ((_d = this.tag) === null || _d === void 0 ? void 0 : _d.winningNumberFontColor)
-                this.style.setProperty('--colors-warning-contrast_text', this.tag.winningNumberFontColor);
-            if ((_e = this.tag) === null || _e === void 0 ? void 0 : _e.winningNumberBackgroundColor)
-                this.style.setProperty('--colors-warning-main', this.tag.winningNumberBackgroundColor);
-            if ((_f = this.tag) === null || _f === void 0 ? void 0 : _f.nextDrawFontColor)
-                this.style.setProperty('--text-secondary', this.tag.nextDrawFontColor);
+            this.updateStyle('--text-primary', (_a = this.tag) === null || _a === void 0 ? void 0 : _a.fontColor);
+            this.updateStyle('--background-main', (_b = this.tag) === null || _b === void 0 ? void 0 : _b.backgroundColor);
+            this.updateStyle('--colors-primary-main', (_c = this.tag) === null || _c === void 0 ? void 0 : _c.roundNumberFontColor);
+            this.updateStyle('--colors-warning-contrast_text', (_d = this.tag) === null || _d === void 0 ? void 0 : _d.winningNumberFontColor);
+            this.updateStyle('--colors-warning-main', (_e = this.tag) === null || _e === void 0 ? void 0 : _e.winningNumberBackgroundColor);
+            this.updateStyle('--text-secondary', (_f = this.tag) === null || _f === void 0 ? void 0 : _f.nextDrawFontColor);
         }
         getActions() {
             const actions = [
@@ -200,7 +206,7 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
                     command: (builder, userInputData) => {
                         return {
                             execute: async () => {
-                                this._oldData = this._data;
+                                this._oldData = Object.assign({}, this._data);
                                 if (userInputData.releaseUTCTime != undefined) {
                                     this._data.releaseUTCTime = userInputData.releaseUTCTime;
                                     this._data.releaseTime = components_2.moment.utc(this._data.releaseUTCTime).valueOf().toString();
@@ -217,9 +223,15 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
                                     this._data.to = userInputData.to;
                                 this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
                                 await this.refreshApp();
+                                if (builder === null || builder === void 0 ? void 0 : builder.setData)
+                                    builder.setData(this._data);
                             },
-                            undo: () => {
-                                this._data = this._oldData;
+                            undo: async () => {
+                                this._data = Object.assign({}, this._oldData);
+                                this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
+                                await this.refreshApp();
+                                if (builder === null || builder === void 0 ? void 0 : builder.setData)
+                                    builder.setData(this._data);
                             },
                             redo: () => { }
                         };
@@ -253,19 +265,20 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
                     command: (builder, userInputData) => {
                         return {
                             execute: async () => {
-                                if (userInputData) {
-                                    this.oldTag = this.tag;
-                                    this.setTag(userInputData);
-                                    if (builder)
-                                        builder.setTag(userInputData);
-                                }
+                                if (!userInputData)
+                                    return;
+                                this.oldTag = Object.assign({}, this.tag);
+                                if (builder)
+                                    builder.setTag(userInputData);
+                                this.setTag(userInputData);
                             },
                             undo: () => {
-                                if (userInputData) {
-                                    this.setTag(this.oldTag);
-                                    if (builder)
-                                        builder.setTag(this.oldTag);
-                                }
+                                if (!userInputData)
+                                    return;
+                                this.tag = Object.assign({}, this.oldTag);
+                                if (builder)
+                                    builder.setTag(this.tag);
+                                this.setTag(this.tag);
                             },
                             redo: () => { }
                         };
