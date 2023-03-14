@@ -5,7 +5,8 @@ import {
   HStack,
   GridLayout,
   moment,
-  Styles
+  Styles,
+  application
 } from "@ijstech/components";
 import { IConfig, PageBlock } from "@pageblock-randomizer/global";
 import './index.css';
@@ -40,6 +41,7 @@ export class RandomizerBlock extends Module implements PageBlock {
 
   async init() {
     super.init();
+    application.EventBus.dispatch('embedInitialized', this);
   }
 
   async getData() {

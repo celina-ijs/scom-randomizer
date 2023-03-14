@@ -101,6 +101,7 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
         }
         async init() {
             super.init();
+            components_2.application.EventBus.dispatch('embedInitialized', this);
         }
         async getData() {
             return this._data;
