@@ -61,7 +61,7 @@ export class RandomizerBlock extends Module implements PageBlock {
   async refreshApp() {
     this.lbRound.caption = this._data.round?.toString() || '';
     this.lbDrawTime.caption = this._data.releaseTime ?
-      moment(Number(this._data.releaseTime)).format('MMM DD, YYYY, h:mm A') : '';
+      moment.utc(Number(this._data.releaseTime)).format('MMM DD, YYYY [at] HH:mm [UTC]') : '';
     this.gridResults.clearInnerHTML();
     if (this._data.releaseTime && Number(this._data.releaseTime) > new Date().getTime()) {
       this.hstackResult.visible = false;
@@ -179,6 +179,7 @@ export class RandomizerBlock extends Module implements PageBlock {
           type: 'object',
           properties: {     
             "releaseUTCTime": {
+              title: "Release UTC Time",
               type: "string",
               format: "date-time"
             },               

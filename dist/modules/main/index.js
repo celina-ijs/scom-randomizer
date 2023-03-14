@@ -120,7 +120,7 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
             var _a;
             this.lbRound.caption = ((_a = this._data.round) === null || _a === void 0 ? void 0 : _a.toString()) || '';
             this.lbDrawTime.caption = this._data.releaseTime ?
-                components_2.moment(Number(this._data.releaseTime)).format('MMM DD, YYYY, h:mm A') : '';
+                components_2.moment.utc(Number(this._data.releaseTime)).format('MMM DD, YYYY [at] HH:mm [UTC]') : '';
             this.gridResults.clearInnerHTML();
             if (this._data.releaseTime && Number(this._data.releaseTime) > new Date().getTime()) {
                 this.hstackResult.visible = false;
@@ -181,7 +181,6 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
                 if (newValue.hasOwnProperty(prop))
                     this.tag[prop] = newValue[prop];
             }
-            console.log('set tag', this.tag, this.oldTag);
             this.updateTheme();
         }
         updateStyle(name, value) {
@@ -228,7 +227,7 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
                             },
                             undo: async () => {
                                 this._data = Object.assign({}, this._oldData);
-                                this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
+                                this._data.round = this._data.releaseTime ? await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime)) : 0;
                                 await this.refreshApp();
                                 if (builder === null || builder === void 0 ? void 0 : builder.setData)
                                     builder.setData(this._data);
@@ -240,6 +239,7 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
                         type: 'object',
                         properties: {
                             "releaseUTCTime": {
+                                title: "Release UTC Time",
                                 type: "string",
                                 format: "date-time"
                             },
