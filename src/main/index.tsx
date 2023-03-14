@@ -268,8 +268,12 @@ export class RandomizerBlock extends Module implements PageBlock {
           </i-hstack>
           <i-stack
             direction="horizontal"
-            gap="4.938rem"
+            gap="2.5rem"
           >
+            <i-vstack gap='0.25rem'>
+              <i-label caption="Draw Time:" font={{size: '1rem', weight: 500}} opacity={0.5} class="no-wrap"></i-label>
+              <i-label id="lbDrawTime" font={{size: '1.5rem', weight: 500, color: Theme.text.secondary}}></i-label>
+            </i-vstack>           
             <i-hstack gap='0.25rem' visible={false} id="hstackCountdown">
               <i-vstack>
                 <i-label caption="Time until result:" font={{size: '1rem', weight: 500}} opacity={0.5} class="no-wrap"/>
@@ -316,10 +320,6 @@ export class RandomizerBlock extends Module implements PageBlock {
             <i-vstack gap='0.25rem'>
               <i-label caption="Reference Round Number:" font={{size: '1rem', weight: 500}} opacity={0.5} class="no-wrap"></i-label>
               <i-label id="lbRound" font={{size: '1.5rem', weight: 500, color: Theme.colors.primary.main}}></i-label>
-            </i-vstack>
-            <i-vstack gap='0.25rem'>
-              <i-label caption="Draw Time:" font={{size: '1rem', weight: 500}} opacity={0.5} class="no-wrap"></i-label>
-              <i-label id="lbDrawTime" font={{size: '1.5rem', weight: 500, color: Theme.text.secondary}}></i-label>
             </i-vstack>
           </i-stack>
           <i-hstack
