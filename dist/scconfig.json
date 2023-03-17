@@ -1,24 +1,18 @@
 {
-    "name": "@pageblock-randomizer/main",
-    "version": "0.1.0",
-    "env": "",
-    "moduleDir": "modules",
-    "main": "@pageblock-randomizer/main",
-    "modules": {
-        "@pageblock-randomizer/main": {
-            "path": "main",
-            "dependencies": [
-                "@pageblock-randomizer/global",
-                "@ijstech/eth-wallet"
-            ]
-        },
-        "@pageblock-randomizer/global": {
-            "path": "global",
-            "dependencies": []
-        }
+  "name": "@pageblock-randomizer/main",
+  "version": "0.1.0",
+  "env": "",
+  "moduleDir": "src",
+  "main": "@pageblock-randomizer/main",
+  "modules": {
+    "@pageblock-randomizer/main": {
+      "path": "main"
     },
-    "dependencies": {
-        "@ijstech/eth-wallet": "*",
-        "@ijstech/eth-contract": "*"
+    "@pageblock-randomizer/global": {
+      "path": "global"
     }
+  },
+  "dependencies": {
+      "@ijstech/eth-contract": "*"
+  }
 }

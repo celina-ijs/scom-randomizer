@@ -1,14 +1,15 @@
 {
-  "name": "@pageblock/pageblock-randomizer",
-  "author": "IJS Technologies",
+  "name": "@scom/scom-randomizer",
   "version": "0.1.0",
+  "main": "dist/index.js",
+  "plugin": "dist",
+  "pluginTypes": "pluginTypes/index.d.ts",
+  "types": "types/index.d.ts",
   "scripts": {
     "build": "rm -rf dist && npx @ijstech/compiler",
     "serve": "npx @ijstech/cli serve 8080",
-    "test": "ts-node test/test.ts"
+    "test": "cd test && npm run test && cd .."
   },
-  "keywords": [],
-  "license": "AGPL-3.0",
   "dependencies": {
     "@ijstech/eth-wallet": "^0.1.35",
     "@ijstech/eth-contract": "^0.1.10"
