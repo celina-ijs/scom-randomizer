@@ -41,7 +41,7 @@ export class RandomizerBlock extends Module implements PageBlock {
 
   async init() {
     super.init();
-    application.EventBus.dispatch('embedInitialized', this);
+    // application.EventBus.dispatch('embedInitialized', this);
   }
 
   async getData() {
@@ -144,6 +144,10 @@ export class RandomizerBlock extends Module implements PageBlock {
     this.updateStyle('--text-secondary', this.tag?.nextDrawFontColor);
   }
 
+  getEmbedderActions() {
+    return this.getActions();
+  }
+  
   getActions() {
     const actions = [
       {

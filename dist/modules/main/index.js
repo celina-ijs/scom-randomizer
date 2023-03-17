@@ -101,7 +101,7 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
         }
         async init() {
             super.init();
-            components_2.application.EventBus.dispatch('embedInitialized', this);
+            // application.EventBus.dispatch('embedInitialized', this);
         }
         async getData() {
             return this._data;
@@ -197,6 +197,9 @@ define("@pageblock-randomizer/main", ["require", "exports", "@ijstech/components
             this.updateStyle('--colors-warning-contrast_text', (_d = this.tag) === null || _d === void 0 ? void 0 : _d.winningNumberFontColor);
             this.updateStyle('--colors-warning-main', (_e = this.tag) === null || _e === void 0 ? void 0 : _e.winningNumberBackgroundColor);
             this.updateStyle('--text-secondary', (_f = this.tag) === null || _f === void 0 ? void 0 : _f.nextDrawFontColor);
+        }
+        getEmbedderActions() {
+            return this.getActions();
         }
         getActions() {
             const actions = [
