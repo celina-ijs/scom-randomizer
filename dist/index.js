@@ -103,6 +103,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             this.tag = {};
         }
         async init() {
+            this.isReadyCallbackQueued = true;
             super.init();
             this._data.releaseUTCTime = this.getAttribute('releaseUTCTime', true);
             this._data.numberOfValues = this.getAttribute('numberOfValues', true);
@@ -113,6 +114,8 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                 this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
             }
             await this.refreshApp();
+            this.isReadyCallbackQueued = false;
+            this.executeReadyCallback();
         }
         static async create(options, parent) {
             let self = new this(parent, options);
