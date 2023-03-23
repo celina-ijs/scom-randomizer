@@ -58,7 +58,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
     this._data.numberOfValues = this.getAttribute('numberOfValues', true);
     this._data.from = this.getAttribute('from', true);
     this._data.to = this.getAttribute('to', true);
-    this._data.releaseTime = moment.utc(this._data.releaseUTCTime).valueOf().toString();
+    this.setReleaseTime();
     if (!this._data.round && this._data.releaseTime) {
       this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
     }
@@ -71,7 +71,12 @@ export default class ScomRandomizer extends Module implements PageBlock {
     let self = new this(parent, options);
     await self.ready();
     return self;
-  }   
+  }
+
+  private setReleaseTime() {
+    const utcValue = moment.utc(this._data.releaseUTCTime).valueOf()
+    this._data.releaseTime = isNaN(utcValue) ? '' : utcValue.toString();
+  }
 
   get releaseUTCTime() {
     return this._data.releaseUTCTime;
@@ -79,7 +84,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
 
   set releaseUTCTime(value: string) {
     this._data.releaseUTCTime = value;
-    this._data.releaseTime = moment.utc(this._data.releaseUTCTime).valueOf().toString();
+    this.setReleaseTime();
     if (!this._data.round && this._data.releaseTime) {
       getRoundByReleaseTime(Number(this._data.releaseTime)).then(round => {
         this._data.round = round;
@@ -228,9 +233,9 @@ export default class ScomRandomizer extends Module implements PageBlock {
           return {
             execute: async () => {
               this._oldData = {...this._data};
-              if (userInputData.releaseUTCTime != undefined) {
+              if (userInputData.releaseUTCTime !== undefined) {
                 this._data.releaseUTCTime = userInputData.releaseUTCTime;
-                this._data.releaseTime = moment.utc(this._data.releaseUTCTime).valueOf().toString();
+                this.setReleaseTime();
               }
               if (userInputData.releaseTime != undefined) {
                 this._data.releaseTime = userInputData.releaseTime;
@@ -239,7 +244,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
               if (userInputData.numberOfValues != undefined) this._data.numberOfValues = userInputData.numberOfValues;
               if (userInputData.from != undefined) this._data.from = userInputData.from;
               if (userInputData.to != undefined) this._data.to = userInputData.to;
-              this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
+              this._data.round = this._data.releaseTime ? await getRoundByReleaseTime(Number(this._data.releaseTime)) : 0;
               await this.refreshApp();
               if (builder?.setData) builder.setData(this._data);
             },
