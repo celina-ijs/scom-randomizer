@@ -109,7 +109,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             this._data.numberOfValues = this.getAttribute('numberOfValues', true);
             this._data.from = this.getAttribute('from', true);
             this._data.to = this.getAttribute('to', true);
-            this._data.releaseTime = components_2.moment.utc(this._data.releaseUTCTime).valueOf().toString();
+            this.setReleaseTime();
             if (!this._data.round && this._data.releaseTime) {
                 this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
             }
@@ -122,12 +122,16 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             await self.ready();
             return self;
         }
+        setReleaseTime() {
+            const utcValue = components_2.moment.utc(this._data.releaseUTCTime).valueOf();
+            this._data.releaseTime = isNaN(utcValue) ? '' : utcValue.toString();
+        }
         get releaseUTCTime() {
             return this._data.releaseUTCTime;
         }
         set releaseUTCTime(value) {
             this._data.releaseUTCTime = value;
-            this._data.releaseTime = components_2.moment.utc(this._data.releaseUTCTime).valueOf().toString();
+            this.setReleaseTime();
             if (!this._data.round && this._data.releaseTime) {
                 utils_1.getRoundByReleaseTime(Number(this._data.releaseTime)).then(round => {
                     this._data.round = round;
@@ -263,9 +267,9 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                         return {
                             execute: async () => {
                                 this._oldData = Object.assign({}, this._data);
-                                if (userInputData.releaseUTCTime != undefined) {
+                                if (userInputData.releaseUTCTime !== undefined) {
                                     this._data.releaseUTCTime = userInputData.releaseUTCTime;
-                                    this._data.releaseTime = components_2.moment.utc(this._data.releaseUTCTime).valueOf().toString();
+                                    this.setReleaseTime();
                                 }
                                 if (userInputData.releaseTime != undefined) {
                                     this._data.releaseTime = userInputData.releaseTime;
@@ -277,7 +281,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                                     this._data.from = userInputData.from;
                                 if (userInputData.to != undefined)
                                     this._data.to = userInputData.to;
-                                this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
+                                this._data.round = this._data.releaseTime ? await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime)) : 0;
                                 await this.refreshApp();
                                 if (builder === null || builder === void 0 ? void 0 : builder.setData)
                                     builder.setData(this._data);

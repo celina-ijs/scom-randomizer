@@ -62,6 +62,7 @@ declare module "@scom/scom-randomizer" {
         tag: any;
         init(): Promise<void>;
         static create(options?: ScomRandomizerElement, parent?: Container): Promise<ScomRandomizer>;
+        private setReleaseTime;
         get releaseUTCTime(): string;
         set releaseUTCTime(value: string);
         get numberOfValues(): number;
