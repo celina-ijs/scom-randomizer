@@ -110,6 +110,8 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             this._data.numberOfValues = this.getAttribute('numberOfValues', true);
             this._data.from = this.getAttribute('from', true);
             this._data.to = this.getAttribute('to', true);
+            this._data.showHeader = this.getAttribute('showHeader', true);
+            this._data.showFooter = this.getAttribute('showFooter', true);
             this.setReleaseTime();
             if (!this._data.round && this._data.releaseTime) {
                 this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
@@ -133,9 +135,8 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                 dark: getColors(components_2.Styles.Theme.darkTheme),
                 light: getColors(components_2.Styles.Theme.defaultTheme)
             };
-            console.log(defaultTag);
             this.oldTag = Object.assign({}, defaultTag);
-            this.setTag(defaultTag);
+            this.setTag(defaultTag, true);
         }
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -194,10 +195,17 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             await this.refreshApp();
         }
         async refreshApp() {
-            var _a;
+            var _a, _b, _c, _d;
+            const data = {
+                showWalletNetwork: false,
+                showHeader: (_a = this._data.showHeader) !== null && _a !== void 0 ? _a : true,
+                showFooter: (_b = this._data.showFooter) !== null && _b !== void 0 ? _b : true
+            };
+            if ((_c = this.dappContainer) === null || _c === void 0 ? void 0 : _c.setData)
+                this.dappContainer.setData(data);
             if (!this.lbRound.isConnected)
                 await this.lbRound.ready();
-            this.lbRound.caption = ((_a = this._data.round) === null || _a === void 0 ? void 0 : _a.toString()) || '';
+            this.lbRound.caption = ((_d = this._data.round) === null || _d === void 0 ? void 0 : _d.toString()) || '';
             if (!this.lbDrawTime.isConnected)
                 await this.lbDrawTime.ready();
             this.lbDrawTime.caption = this._data.releaseTime ?
@@ -272,12 +280,14 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                     this.tag[type][prop] = value[prop];
             }
         }
-        async setTag(value) {
+        async setTag(value, init) {
             const newValue = value || {};
             if (newValue.light)
                 this.updateTag('light', newValue.light);
             if (newValue.dark)
                 this.updateTag('dark', newValue.dark);
+            if (this.dappContainer && !init)
+                this.dappContainer.setTag(this.tag);
             this.updateTheme();
         }
         updateStyle(name, value) {
@@ -286,14 +296,14 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                 this.style.removeProperty(name);
         }
         updateTheme() {
-            var _a, _b, _c, _d, _e, _f;
-            const themeVar = document.body.style.getPropertyValue('--theme') || 'light';
-            this.updateStyle('--text-primary', (_a = this.tag[themeVar]) === null || _a === void 0 ? void 0 : _a.fontColor);
-            this.updateStyle('--background-main', (_b = this.tag[themeVar]) === null || _b === void 0 ? void 0 : _b.backgroundColor);
-            this.updateStyle('--colors-primary-main', (_c = this.tag[themeVar]) === null || _c === void 0 ? void 0 : _c.roundNumberFontColor);
-            this.updateStyle('--colors-warning-contrast_text', (_d = this.tag[themeVar]) === null || _d === void 0 ? void 0 : _d.winningNumberFontColor);
-            this.updateStyle('--colors-warning-main', (_e = this.tag[themeVar]) === null || _e === void 0 ? void 0 : _e.winningNumberBackgroundColor);
-            this.updateStyle('--text-secondary', (_f = this.tag[themeVar]) === null || _f === void 0 ? void 0 : _f.nextDrawFontColor);
+            var _a, _b, _c, _d, _e, _f, _g;
+            const themeVar = ((_a = this.dappContainer) === null || _a === void 0 ? void 0 : _a.theme) || 'light';
+            this.updateStyle('--text-primary', (_b = this.tag[themeVar]) === null || _b === void 0 ? void 0 : _b.fontColor);
+            this.updateStyle('--background-main', (_c = this.tag[themeVar]) === null || _c === void 0 ? void 0 : _c.backgroundColor);
+            this.updateStyle('--colors-primary-main', (_d = this.tag[themeVar]) === null || _d === void 0 ? void 0 : _d.roundNumberFontColor);
+            this.updateStyle('--colors-warning-contrast_text', (_e = this.tag[themeVar]) === null || _e === void 0 ? void 0 : _e.winningNumberFontColor);
+            this.updateStyle('--colors-warning-main', (_f = this.tag[themeVar]) === null || _f === void 0 ? void 0 : _f.winningNumberBackgroundColor);
+            this.updateStyle('--text-secondary', (_g = this.tag[themeVar]) === null || _g === void 0 ? void 0 : _g.nextDrawFontColor);
         }
         getPropertiesSchema() {
             return {
@@ -514,11 +524,13 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                             execute: async () => {
                                 if (!userInputData)
                                     return;
-                                console.log(userInputData);
                                 this.oldTag = Object.assign({}, this.tag);
                                 if (builder)
                                     builder.setTag(userInputData);
-                                this.setTag(userInputData);
+                                else
+                                    this.setTag(userInputData);
+                                if (this.dappContainer)
+                                    this.dappContainer.setTag(userInputData);
                             },
                             undo: () => {
                                 if (!userInputData)
@@ -526,7 +538,10 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                                 this.tag = Object.assign({}, this.oldTag);
                                 if (builder)
                                     builder.setTag(this.tag);
-                                this.setTag(this.tag);
+                                else
+                                    this.setTag(this.tag);
+                                if (this.dappContainer)
+                                    this.dappContainer.setTag(this.tag);
                             },
                             redo: () => { }
                         };
@@ -538,7 +553,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
         }
         render() {
             const paddingTimeUnit = { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' };
-            return (this.$render("i-panel", null,
+            return (this.$render("i-scom-dapp-container", { id: "dappContainer" },
                 this.$render("i-vstack", { id: "pnlRandomizerMain", background: { color: Theme.background.main }, padding: { top: '1.5rem', bottom: '4.75rem', left: '1rem', right: '1rem' } },
                     this.$render("i-hstack", { gap: '0.25rem', visible: false, id: "hstackReleaseTime" },
                         this.$render("i-label", { caption: "Result will be released on ", font: { size: '1.2rem' } }),

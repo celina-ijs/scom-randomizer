@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@ijstech/eth-wallet": "^0.1.35",
-    "@ijstech/eth-contract": "^0.1.10"
+    "@ijstech/eth-contract": "^0.1.10",
+    "@scom/scom-dapp-container": "https://github.com/scom-repos/scom-dapp-container.git"
   },
   "devDependencies": {
     "@ijstech/cli": "^0.1.26",

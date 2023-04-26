@@ -28,6 +28,7 @@ export default class Module1 extends Module {
                     numberOfValues={10}
                     from={1}
                     to={100}
+                    showFooter={false}
                 ></i-scom-randomizer>
             </i-hstack>
         </i-panel>

@@ -16,4 +16,6 @@ export interface IConfig {
   numberOfValues?: number;
   from?: number;
   to?: number;
+  showHeader?: boolean;
+  showFooter?: boolean;
 }

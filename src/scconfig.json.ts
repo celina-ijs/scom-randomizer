@@ -1,4 +1,4 @@
-{
+export default {
   "name": "@pageblock-randomizer/main",
   "version": "0.1.0",
   "env": "",

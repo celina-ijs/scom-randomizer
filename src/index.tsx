@@ -7,7 +7,6 @@ import {
   GridLayout,
   moment,
   Styles,
-  application,
   ControlElement,
   Container,
   IDataSchema
@@ -16,12 +15,15 @@ import {} from '@ijstech/eth-contract'
 import { IConfig, PageBlock } from "./global/index";
 import './index.css';
 import { getRoundByReleaseTime, getRandomizerResult } from "./utils";
+import ScomDappContainer from "@scom/scom-dapp-container";
 
 interface ScomRandomizerElement extends ControlElement {
   releaseUTCTime?: string;
   numberOfValues?: number;
   from?: number;
   to?: number;
+  showHeader?: boolean;
+  showFooter?: boolean;
 }
 const Theme = Styles.Theme.ThemeVars;
 
@@ -48,6 +50,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
   private lbReleasedDays: Label;
   private lbReleasedHours: Label;
   private lbReleasedMins: Label;
+  private dappContainer: ScomDappContainer;
   private timer: any;
   private oldTag: any = {};
   tag: any = {};
@@ -60,6 +63,8 @@ export default class ScomRandomizer extends Module implements PageBlock {
     this._data.numberOfValues = this.getAttribute('numberOfValues', true);
     this._data.from = this.getAttribute('from', true);
     this._data.to = this.getAttribute('to', true);
+    this._data.showHeader = this.getAttribute('showHeader', true);
+    this._data.showFooter = this.getAttribute('showFooter', true);
     this.setReleaseTime();
     if (!this._data.round && this._data.releaseTime) {
       this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
@@ -85,7 +90,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
       light: getColors(Styles.Theme.defaultTheme)
     }
     this.oldTag = {...defaultTag};
-    this.setTag(defaultTag);
+    this.setTag(defaultTag, true);
   }
 
   static async create(options?: ScomRandomizerElement, parent?: Container){
@@ -157,6 +162,12 @@ export default class ScomRandomizer extends Module implements PageBlock {
   }
 
   async refreshApp() {
+    const data: any = {
+      showWalletNetwork: false,
+      showHeader: this._data.showHeader ?? true,
+      showFooter: this._data.showFooter ?? true
+    }
+    if (this.dappContainer?.setData) this.dappContainer.setData(data)
     if (!this.lbRound.isConnected) await this.lbRound.ready();
     this.lbRound.caption = this._data.round?.toString() || '';
     if (!this.lbDrawTime.isConnected) await this.lbDrawTime.ready();
@@ -230,10 +241,11 @@ export default class ScomRandomizer extends Module implements PageBlock {
     }
   }
 
-  async setTag(value: any) {
+  async setTag(value: any, init?: boolean) {
     const newValue = value || {};
     if (newValue.light) this.updateTag('light', newValue.light);
     if (newValue.dark) this.updateTag('dark', newValue.dark);
+    if (this.dappContainer && !init) this.dappContainer.setTag(this.tag);
     this.updateTheme();
   }
 
@@ -244,7 +256,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
   }
 
   private updateTheme() {
-    const themeVar = document.body.style.getPropertyValue('--theme') || 'light';
+    const themeVar = this.dappContainer?.theme || 'light';
     this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
     this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
     this.updateStyle('--colors-primary-main', this.tag[themeVar]?.roundNumberFontColor);
@@ -469,16 +481,17 @@ export default class ScomRandomizer extends Module implements PageBlock {
           return {
             execute: async () => {
               if (!userInputData) return;
-              console.log(userInputData)
               this.oldTag = {...this.tag};
               if (builder) builder.setTag(userInputData);
-              this.setTag(userInputData);
+              else this.setTag(userInputData);
+              if (this.dappContainer) this.dappContainer.setTag(userInputData);
             },
             undo: () => {
               if (!userInputData) return;
               this.tag = {...this.oldTag};
               if (builder) builder.setTag(this.tag);
-              this.setTag(this.tag);
+              else this.setTag(this.tag);
+              if (this.dappContainer) this.dappContainer.setTag(this.tag);
             },
             redo: () => {}
           }
@@ -492,7 +505,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
   render() {
     const paddingTimeUnit = { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem'};
     return (
-      <i-panel>
+      <i-scom-dapp-container id="dappContainer">
         <i-vstack
           id="pnlRandomizerMain"
           background={{color: Theme.background.main}}
@@ -573,7 +586,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
             ></i-grid-layout>
           </i-hstack>
         </i-vstack>
-      </i-panel>
+      </i-scom-dapp-container>
     );
   }
 }
