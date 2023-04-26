@@ -28,7 +28,7 @@ declare module "@scom/scom-randomizer/utils.ts" {
 }
 /// <amd-module name="@scom/scom-randomizer" />
 declare module "@scom/scom-randomizer" {
-    import { Module, ControlElement, Container } from "@ijstech/components";
+    import { Module, ControlElement, Container, IDataSchema } from "@ijstech/components";
     import { IConfig, PageBlock } from "@scom/scom-randomizer/global/index.ts";
     import "@scom/scom-randomizer/index.css.ts";
     interface ScomRandomizerElement extends ControlElement {
@@ -61,6 +61,7 @@ declare module "@scom/scom-randomizer" {
         private oldTag;
         tag: any;
         init(): Promise<void>;
+        private initTag;
         static create(options?: ScomRandomizerElement, parent?: Container): Promise<ScomRandomizer>;
         private setReleaseTime;
         get releaseUTCTime(): string;
@@ -75,43 +76,30 @@ declare module "@scom/scom-randomizer" {
         setData(value: IConfig): Promise<void>;
         refreshApp(): Promise<void>;
         getTag(): any;
+        private updateTag;
         setTag(value: any): Promise<void>;
         private updateStyle;
         private updateTheme;
-        getEmbedderActions(): ({
-            name: string;
-            icon: string;
-            command: (builder: any, userInputData: any) => {
-                execute: () => Promise<void>;
-                undo: () => Promise<void>;
-                redo: () => void;
-            };
-            userInputDataSchema: {
-                type: string;
-                properties: {
-                    releaseUTCTime: {
-                        title: string;
-                        type: string;
-                        format: string;
-                    };
-                    numberOfValues: {
-                        type: string;
-                    };
-                    from: {
-                        type: string;
-                    };
-                    to: {
-                        type: string;
-                    };
-                    backgroundColor?: undefined;
-                    fontColor?: undefined;
-                    winningNumberBackgroundColor?: undefined;
-                    winningNumberFontColor?: undefined;
-                    roundNumberFontColor?: undefined;
-                    nextDrawFontColor?: undefined;
+        getPropertiesSchema(): {
+            type: string;
+            properties: {
+                releaseUTCTime: {
+                    title: string;
+                    type: string;
+                    format: string;
+                };
+                numberOfValues: {
+                    type: string;
+                };
+                from: {
+                    type: string;
+                };
+                to: {
+                    type: string;
                 };
             };
-        } | {
+        };
+        getEmbedderActions(): {
             name: string;
             icon: string;
             command: (builder: any, userInputData: any) => {
@@ -119,74 +107,9 @@ declare module "@scom/scom-randomizer" {
                 undo: () => void;
                 redo: () => void;
             };
-            userInputDataSchema: {
-                type: string;
-                properties: {
-                    backgroundColor: {
-                        type: string;
-                        format: string;
-                    };
-                    fontColor: {
-                        type: string;
-                        format: string;
-                    };
-                    winningNumberBackgroundColor: {
-                        type: string;
-                        format: string;
-                    };
-                    winningNumberFontColor: {
-                        type: string;
-                        format: string;
-                    };
-                    roundNumberFontColor: {
-                        type: string;
-                        format: string;
-                    };
-                    nextDrawFontColor: {
-                        type: string;
-                        format: string;
-                    };
-                    releaseUTCTime?: undefined;
-                    numberOfValues?: undefined;
-                    from?: undefined;
-                    to?: undefined;
-                };
-            };
-        })[];
-        getActions(): ({
-            name: string;
-            icon: string;
-            command: (builder: any, userInputData: any) => {
-                execute: () => Promise<void>;
-                undo: () => Promise<void>;
-                redo: () => void;
-            };
-            userInputDataSchema: {
-                type: string;
-                properties: {
-                    releaseUTCTime: {
-                        title: string;
-                        type: string;
-                        format: string;
-                    };
-                    numberOfValues: {
-                        type: string;
-                    };
-                    from: {
-                        type: string;
-                    };
-                    to: {
-                        type: string;
-                    };
-                    backgroundColor?: undefined;
-                    fontColor?: undefined;
-                    winningNumberBackgroundColor?: undefined;
-                    winningNumberFontColor?: undefined;
-                    roundNumberFontColor?: undefined;
-                    nextDrawFontColor?: undefined;
-                };
-            };
-        } | {
+            userInputDataSchema: IDataSchema;
+        }[];
+        getActions(): {
             name: string;
             icon: string;
             command: (builder: any, userInputData: any) => {
@@ -194,40 +117,18 @@ declare module "@scom/scom-randomizer" {
                 undo: () => void;
                 redo: () => void;
             };
-            userInputDataSchema: {
-                type: string;
-                properties: {
-                    backgroundColor: {
-                        type: string;
-                        format: string;
-                    };
-                    fontColor: {
-                        type: string;
-                        format: string;
-                    };
-                    winningNumberBackgroundColor: {
-                        type: string;
-                        format: string;
-                    };
-                    winningNumberFontColor: {
-                        type: string;
-                        format: string;
-                    };
-                    roundNumberFontColor: {
-                        type: string;
-                        format: string;
-                    };
-                    nextDrawFontColor: {
-                        type: string;
-                        format: string;
-                    };
-                    releaseUTCTime?: undefined;
-                    numberOfValues?: undefined;
-                    from?: undefined;
-                    to?: undefined;
-                };
+            userInputDataSchema: IDataSchema;
+        }[];
+        _getActions(propertiesSchema: IDataSchema, themeSchema: IDataSchema): {
+            name: string;
+            icon: string;
+            command: (builder: any, userInputData: any) => {
+                execute: () => Promise<void>;
+                undo: () => void;
+                redo: () => void;
             };
-        })[];
+            userInputDataSchema: IDataSchema;
+        }[];
         render(): any;
     }
 }

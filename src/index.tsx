@@ -9,7 +9,8 @@ import {
   Styles,
   application,
   ControlElement,
-  Container
+  Container,
+  IDataSchema
 } from "@ijstech/components";
 import {} from '@ijstech/eth-contract'
 import { IConfig, PageBlock } from "./global/index";
@@ -54,6 +55,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
   async init() {
     this.isReadyCallbackQueued = true;
     super.init();
+    this.initTag();
     this._data.releaseUTCTime = this.getAttribute('releaseUTCTime', true);
     this._data.numberOfValues = this.getAttribute('numberOfValues', true);
     this._data.from = this.getAttribute('from', true);
@@ -65,6 +67,25 @@ export default class ScomRandomizer extends Module implements PageBlock {
     await this.refreshApp();
     this.isReadyCallbackQueued = false;
     this.executeReadyCallback();
+  }
+
+  private initTag() {
+    const getColors = (vars: any) => {
+      return {
+        "backgroundColor": vars.background.main,
+        "fontColor": vars.text.primary,
+        "winningNumberBackgroundColor": vars.colors.warning.main,
+        "winningNumberFontColor": vars.colors.warning.contrastText,
+        "roundNumberFontColor": vars.colors.primary.main,
+        "nextDrawFontColor": vars.text.secondary
+      }
+    }
+    const defaultTag = {
+      dark: getColors(Styles.Theme.darkTheme),
+      light: getColors(Styles.Theme.defaultTheme)
+    }
+    this.oldTag = {...defaultTag};
+    this.setTag(defaultTag);
   }
 
   static async create(options?: ScomRandomizerElement, parent?: Container){
@@ -125,7 +146,6 @@ export default class ScomRandomizer extends Module implements PageBlock {
   }
 
   async setData(value: IConfig) {
-    console.log("set data");
     this._data = value;
     if (this._data.releaseTime) {
       this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
@@ -137,7 +157,9 @@ export default class ScomRandomizer extends Module implements PageBlock {
   }
 
   async refreshApp() {
+    if (!this.lbRound.isConnected) await this.lbRound.ready();
     this.lbRound.caption = this._data.round?.toString() || '';
+    if (!this.lbDrawTime.isConnected) await this.lbDrawTime.ready();
     this.lbDrawTime.caption = this._data.releaseTime ?
       moment.utc(Number(this._data.releaseTime)).format('MMM DD, YYYY [at] HH:mm [UTC]') : '';
     this.gridResults.clearInnerHTML();
@@ -149,14 +171,18 @@ export default class ScomRandomizer extends Module implements PageBlock {
       this.lbDrawTime.lineHeight = '2.637rem';
       // this.hstackReleaseTime.visible = true;
       this.hstackCountdown.visible = true;
+      if (!this.lbReleaseTime.isConnected) await this.lbReleaseTime.ready();
       this.lbReleaseTime.caption = moment(Number(this._data.releaseTime)).format('YYYY-MM-DD HH:mm');
       if (this.timer) {
         clearInterval(this.timer);
       }
-      const refreshCountdown = () => {
+      const refreshCountdown = async () => {
         const days = moment(Number(this._data.releaseTime)).diff(moment(), 'days');
         const hours = moment(Number(this._data.releaseTime)).diff(moment(), 'hours') - days * 24;
         const mins = moment(Number(this._data.releaseTime)).diff(moment(), 'minutes') - days * 24 * 60 - hours * 60;
+        if (!this.lbReleasedDays.isConnected) await this.lbReleasedDays.ready();
+        if (!this.lbReleasedHours.isConnected) await this.lbReleasedHours.ready();
+        if (!this.lbReleasedMins.isConnected) await this.lbReleasedMins.ready();
         this.lbReleasedDays.caption = days.toString();
         this.lbReleasedHours.caption = hours.toString();
         this.lbReleasedMins.caption = mins.toString();
@@ -196,12 +222,18 @@ export default class ScomRandomizer extends Module implements PageBlock {
     return this.tag;
   }
 
+  private updateTag(type: 'light'|'dark', value: any) {
+    this.tag[type] = this.tag[type] ?? {};
+    for (let prop in value) {
+      if (value.hasOwnProperty(prop))
+        this.tag[type][prop] = value[prop];
+    }
+  }
+
   async setTag(value: any) {
     const newValue = value || {};
-    for (let prop in newValue) {
-      if (newValue.hasOwnProperty(prop))
-        this.tag[prop] = newValue[prop];
-    }
+    if (newValue.light) this.updateTag('light', newValue.light);
+    if (newValue.dark) this.updateTag('dark', newValue.dark);
     this.updateTheme();
   }
 
@@ -212,19 +244,190 @@ export default class ScomRandomizer extends Module implements PageBlock {
   }
 
   private updateTheme() {
-    this.updateStyle('--text-primary', this.tag?.fontColor);
-    this.updateStyle('--background-main', this.tag?.backgroundColor);
-    this.updateStyle('--colors-primary-main', this.tag?.roundNumberFontColor);
-    this.updateStyle('--colors-warning-contrast_text', this.tag?.winningNumberFontColor);
-    this.updateStyle('--colors-warning-main', this.tag?.winningNumberBackgroundColor);
-    this.updateStyle('--text-secondary', this.tag?.nextDrawFontColor);
+    const themeVar = document.body.style.getPropertyValue('--theme') || 'light';
+    this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
+    this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
+    this.updateStyle('--colors-primary-main', this.tag[themeVar]?.roundNumberFontColor);
+    this.updateStyle('--colors-warning-contrast_text', this.tag[themeVar]?.winningNumberFontColor);
+    this.updateStyle('--colors-warning-main', this.tag[themeVar]?.winningNumberBackgroundColor);
+    this.updateStyle('--text-secondary', this.tag[themeVar]?.nextDrawFontColor);
+  }
+
+  getPropertiesSchema() {
+    return {
+      type: 'object',
+      properties: {
+        "releaseUTCTime": {
+          title: "Release UTC Time",
+          type: "string",
+          format: "date-time"
+        },             
+        // "releaseTime": {
+        //   type: "string",
+        //   format: "date-time"
+        // },
+        "numberOfValues": {
+          type: 'number'
+        },
+        "from": {
+          type: 'number'
+        },
+        "to": {
+          type: 'number'
+        }
+      }
+    }
   }
 
   getEmbedderActions() {
-    return this.getActions();
+    const propertiesSchema = this.getPropertiesSchema() as IDataSchema;
+    const themeSchema: IDataSchema = {
+      type: 'object',
+      properties: {
+        dark: {
+          type: 'object',
+          properties: {
+            backgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            fontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            winningNumberBackgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            winningNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            roundNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            nextDrawFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            }
+          }
+        },
+        light: {
+          type: 'object',
+          properties: {
+            backgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            fontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            winningNumberBackgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            winningNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            roundNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            nextDrawFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            }
+          }
+        }
+      }
+    }
+    return this._getActions(propertiesSchema, themeSchema);
   }
   
   getActions() {
+    const propertiesSchema = this.getPropertiesSchema() as IDataSchema;
+    const themeSchema: IDataSchema = {
+      type: 'object',
+      properties: {
+        dark: {
+          type: 'object',
+          properties: {
+            backgroundColor: {
+              type: 'string',
+              format: 'color'
+            },
+            fontColor: {
+              type: 'string',
+              format: 'color'
+            },
+            winningNumberBackgroundColor: {
+              type: 'string',
+              format: 'color'
+            },
+            winningNumberFontColor: {
+              type: 'string',
+              format: 'color'
+            },
+            roundNumberFontColor: {
+              type: 'string',
+              format: 'color'
+            },
+            nextDrawFontColor: {
+              type: 'string',
+              format: 'color'
+            }
+          }
+        },
+        light: {
+          type: 'object',
+          properties: {
+            backgroundColor: {
+              type: 'string',
+              format: 'color'
+            },
+            fontColor: {
+              type: 'string',
+              format: 'color'
+            },
+            winningNumberBackgroundColor: {
+              type: 'string',
+              format: 'color'
+            },
+            winningNumberFontColor: {
+              type: 'string',
+              format: 'color'
+            },
+            roundNumberFontColor: {
+              type: 'string',
+              format: 'color'
+            },
+            nextDrawFontColor: {
+              type: 'string',
+              format: 'color'
+            }
+          }
+        }
+      }
+    }
+    return this._getActions(propertiesSchema, themeSchema);
+  }
+
+  _getActions(propertiesSchema: IDataSchema, themeSchema: IDataSchema) {
     const actions = [
       {
         name: 'Settings',
@@ -257,29 +460,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
             redo: () => {}
           }
         },
-        userInputDataSchema: {
-          type: 'object',
-          properties: {     
-            "releaseUTCTime": {
-              title: "Release UTC Time",
-              type: "string",
-              format: "date-time"
-            },               
-            // "releaseTime": {
-            //   type: "string",
-            //   format: "date-time"
-            // },
-            "numberOfValues": {
-              type: 'number'
-            },
-            "from": {
-              type: 'number'
-            },
-            "to": {
-              type: 'number'
-            }
-          }
-        }
+        userInputDataSchema: propertiesSchema
       },
       {
         name: 'Theme Settings',
@@ -288,6 +469,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
           return {
             execute: async () => {
               if (!userInputData) return;
+              console.log(userInputData)
               this.oldTag = {...this.tag};
               if (builder) builder.setTag(userInputData);
               this.setTag(userInputData);
@@ -301,38 +483,10 @@ export default class ScomRandomizer extends Module implements PageBlock {
             redo: () => {}
           }
         },
-        userInputDataSchema: {
-          type: 'object',
-          properties: {
-            backgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            fontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberBackgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            roundNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            nextDrawFontColor: {
-              type: 'string',
-              format: 'color'
-            }
-          }
-        }
+        userInputDataSchema: themeSchema
       }
     ]
-    return actions
+    return actions;
   }
 
   render() {
