@@ -77,6 +77,10 @@ declare module "@scom/scom-randomizer" {
         set from(value: number);
         get to(): number;
         set to(value: number);
+        get showFooter(): boolean;
+        set showFooter(value: boolean);
+        get showHeader(): boolean;
+        set showHeader(value: boolean);
         getData(): Promise<IConfig>;
         setData(value: IConfig): Promise<void>;
         refreshApp(): Promise<void>;

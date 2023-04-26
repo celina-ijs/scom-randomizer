@@ -181,6 +181,24 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             this._data.to = value;
             this.refreshApp();
         }
+        get showFooter() {
+            var _a;
+            return (_a = this._data.showFooter) !== null && _a !== void 0 ? _a : true;
+        }
+        set showFooter(value) {
+            this._data.showFooter = value;
+            if (this.dappContainer)
+                this.dappContainer.showFooter = this.showFooter;
+        }
+        get showHeader() {
+            var _a;
+            return (_a = this._data.showHeader) !== null && _a !== void 0 ? _a : true;
+        }
+        set showHeader(value) {
+            this._data.showHeader = value;
+            if (this.dappContainer)
+                this.dappContainer.showHeader = this.showHeader;
+        }
         async getData() {
             return this._data;
         }

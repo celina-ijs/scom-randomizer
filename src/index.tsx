@@ -146,6 +146,22 @@ export default class ScomRandomizer extends Module implements PageBlock {
     this.refreshApp();
   }
 
+  get showFooter() {
+    return this._data.showFooter ?? true
+  }
+  set showFooter(value: boolean) {
+    this._data.showFooter = value
+    if (this.dappContainer) this.dappContainer.showFooter = this.showFooter;
+  }
+
+  get showHeader() {
+    return this._data.showHeader ?? true
+  }
+  set showHeader(value: boolean) {
+    this._data.showHeader = value
+    if (this.dappContainer) this.dappContainer.showHeader = this.showHeader;
+  }
+
   async getData() {
     return this._data;
   }
