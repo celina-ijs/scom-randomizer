@@ -105,6 +105,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
         async init() {
             this.isReadyCallbackQueued = true;
             super.init();
+            this.initTag();
             this._data.releaseUTCTime = this.getAttribute('releaseUTCTime', true);
             this._data.numberOfValues = this.getAttribute('numberOfValues', true);
             this._data.from = this.getAttribute('from', true);
@@ -116,6 +117,25 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             await this.refreshApp();
             this.isReadyCallbackQueued = false;
             this.executeReadyCallback();
+        }
+        initTag() {
+            const getColors = (vars) => {
+                return {
+                    "backgroundColor": vars.background.main,
+                    "fontColor": vars.text.primary,
+                    "winningNumberBackgroundColor": vars.colors.warning.main,
+                    "winningNumberFontColor": vars.colors.warning.contrastText,
+                    "roundNumberFontColor": vars.colors.primary.main,
+                    "nextDrawFontColor": vars.text.secondary
+                };
+            };
+            const defaultTag = {
+                dark: getColors(components_2.Styles.Theme.darkTheme),
+                light: getColors(components_2.Styles.Theme.defaultTheme)
+            };
+            console.log(defaultTag);
+            this.oldTag = Object.assign({}, defaultTag);
+            this.setTag(defaultTag);
         }
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -164,7 +184,6 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             return this._data;
         }
         async setData(value) {
-            console.log("set data");
             this._data = value;
             if (this._data.releaseTime) {
                 this._data.releaseUTCTime = components_2.moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
@@ -176,7 +195,11 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
         }
         async refreshApp() {
             var _a;
+            if (!this.lbRound.isConnected)
+                await this.lbRound.ready();
             this.lbRound.caption = ((_a = this._data.round) === null || _a === void 0 ? void 0 : _a.toString()) || '';
+            if (!this.lbDrawTime.isConnected)
+                await this.lbDrawTime.ready();
             this.lbDrawTime.caption = this._data.releaseTime ?
                 components_2.moment.utc(Number(this._data.releaseTime)).format('MMM DD, YYYY [at] HH:mm [UTC]') : '';
             this.gridResults.clearInnerHTML();
@@ -188,14 +211,22 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                 this.lbDrawTime.lineHeight = '2.637rem';
                 // this.hstackReleaseTime.visible = true;
                 this.hstackCountdown.visible = true;
+                if (!this.lbReleaseTime.isConnected)
+                    await this.lbReleaseTime.ready();
                 this.lbReleaseTime.caption = components_2.moment(Number(this._data.releaseTime)).format('YYYY-MM-DD HH:mm');
                 if (this.timer) {
                     clearInterval(this.timer);
                 }
-                const refreshCountdown = () => {
+                const refreshCountdown = async () => {
                     const days = components_2.moment(Number(this._data.releaseTime)).diff(components_2.moment(), 'days');
                     const hours = components_2.moment(Number(this._data.releaseTime)).diff(components_2.moment(), 'hours') - days * 24;
                     const mins = components_2.moment(Number(this._data.releaseTime)).diff(components_2.moment(), 'minutes') - days * 24 * 60 - hours * 60;
+                    if (!this.lbReleasedDays.isConnected)
+                        await this.lbReleasedDays.ready();
+                    if (!this.lbReleasedHours.isConnected)
+                        await this.lbReleasedHours.ready();
+                    if (!this.lbReleasedMins.isConnected)
+                        await this.lbReleasedMins.ready();
                     this.lbReleasedDays.caption = days.toString();
                     this.lbReleasedHours.caption = hours.toString();
                     this.lbReleasedMins.caption = mins.toString();
@@ -233,12 +264,20 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
         getTag() {
             return this.tag;
         }
+        updateTag(type, value) {
+            var _a;
+            this.tag[type] = (_a = this.tag[type]) !== null && _a !== void 0 ? _a : {};
+            for (let prop in value) {
+                if (value.hasOwnProperty(prop))
+                    this.tag[type][prop] = value[prop];
+            }
+        }
         async setTag(value) {
             const newValue = value || {};
-            for (let prop in newValue) {
-                if (newValue.hasOwnProperty(prop))
-                    this.tag[prop] = newValue[prop];
-            }
+            if (newValue.light)
+                this.updateTag('light', newValue.light);
+            if (newValue.dark)
+                this.updateTag('dark', newValue.dark);
             this.updateTheme();
         }
         updateStyle(name, value) {
@@ -248,17 +287,186 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
         }
         updateTheme() {
             var _a, _b, _c, _d, _e, _f;
-            this.updateStyle('--text-primary', (_a = this.tag) === null || _a === void 0 ? void 0 : _a.fontColor);
-            this.updateStyle('--background-main', (_b = this.tag) === null || _b === void 0 ? void 0 : _b.backgroundColor);
-            this.updateStyle('--colors-primary-main', (_c = this.tag) === null || _c === void 0 ? void 0 : _c.roundNumberFontColor);
-            this.updateStyle('--colors-warning-contrast_text', (_d = this.tag) === null || _d === void 0 ? void 0 : _d.winningNumberFontColor);
-            this.updateStyle('--colors-warning-main', (_e = this.tag) === null || _e === void 0 ? void 0 : _e.winningNumberBackgroundColor);
-            this.updateStyle('--text-secondary', (_f = this.tag) === null || _f === void 0 ? void 0 : _f.nextDrawFontColor);
+            const themeVar = document.body.style.getPropertyValue('--theme') || 'light';
+            this.updateStyle('--text-primary', (_a = this.tag[themeVar]) === null || _a === void 0 ? void 0 : _a.fontColor);
+            this.updateStyle('--background-main', (_b = this.tag[themeVar]) === null || _b === void 0 ? void 0 : _b.backgroundColor);
+            this.updateStyle('--colors-primary-main', (_c = this.tag[themeVar]) === null || _c === void 0 ? void 0 : _c.roundNumberFontColor);
+            this.updateStyle('--colors-warning-contrast_text', (_d = this.tag[themeVar]) === null || _d === void 0 ? void 0 : _d.winningNumberFontColor);
+            this.updateStyle('--colors-warning-main', (_e = this.tag[themeVar]) === null || _e === void 0 ? void 0 : _e.winningNumberBackgroundColor);
+            this.updateStyle('--text-secondary', (_f = this.tag[themeVar]) === null || _f === void 0 ? void 0 : _f.nextDrawFontColor);
+        }
+        getPropertiesSchema() {
+            return {
+                type: 'object',
+                properties: {
+                    "releaseUTCTime": {
+                        title: "Release UTC Time",
+                        type: "string",
+                        format: "date-time"
+                    },
+                    // "releaseTime": {
+                    //   type: "string",
+                    //   format: "date-time"
+                    // },
+                    "numberOfValues": {
+                        type: 'number'
+                    },
+                    "from": {
+                        type: 'number'
+                    },
+                    "to": {
+                        type: 'number'
+                    }
+                }
+            };
         }
         getEmbedderActions() {
-            return this.getActions();
+            const propertiesSchema = this.getPropertiesSchema();
+            const themeSchema = {
+                type: 'object',
+                properties: {
+                    dark: {
+                        type: 'object',
+                        properties: {
+                            backgroundColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            fontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            winningNumberBackgroundColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            winningNumberFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            roundNumberFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            nextDrawFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            }
+                        }
+                    },
+                    light: {
+                        type: 'object',
+                        properties: {
+                            backgroundColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            fontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            winningNumberBackgroundColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            winningNumberFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            roundNumberFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            nextDrawFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            }
+                        }
+                    }
+                }
+            };
+            return this._getActions(propertiesSchema, themeSchema);
         }
         getActions() {
+            const propertiesSchema = this.getPropertiesSchema();
+            const themeSchema = {
+                type: 'object',
+                properties: {
+                    dark: {
+                        type: 'object',
+                        properties: {
+                            backgroundColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            fontColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            winningNumberBackgroundColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            winningNumberFontColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            roundNumberFontColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            nextDrawFontColor: {
+                                type: 'string',
+                                format: 'color'
+                            }
+                        }
+                    },
+                    light: {
+                        type: 'object',
+                        properties: {
+                            backgroundColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            fontColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            winningNumberBackgroundColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            winningNumberFontColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            roundNumberFontColor: {
+                                type: 'string',
+                                format: 'color'
+                            },
+                            nextDrawFontColor: {
+                                type: 'string',
+                                format: 'color'
+                            }
+                        }
+                    }
+                }
+            };
+            return this._getActions(propertiesSchema, themeSchema);
+        }
+        _getActions(propertiesSchema, themeSchema) {
             const actions = [
                 {
                     name: 'Settings',
@@ -296,29 +504,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                             redo: () => { }
                         };
                     },
-                    userInputDataSchema: {
-                        type: 'object',
-                        properties: {
-                            "releaseUTCTime": {
-                                title: "Release UTC Time",
-                                type: "string",
-                                format: "date-time"
-                            },
-                            // "releaseTime": {
-                            //   type: "string",
-                            //   format: "date-time"
-                            // },
-                            "numberOfValues": {
-                                type: 'number'
-                            },
-                            "from": {
-                                type: 'number'
-                            },
-                            "to": {
-                                type: 'number'
-                            }
-                        }
-                    }
+                    userInputDataSchema: propertiesSchema
                 },
                 {
                     name: 'Theme Settings',
@@ -328,6 +514,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                             execute: async () => {
                                 if (!userInputData)
                                     return;
+                                console.log(userInputData);
                                 this.oldTag = Object.assign({}, this.tag);
                                 if (builder)
                                     builder.setTag(userInputData);
@@ -344,35 +531,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                             redo: () => { }
                         };
                     },
-                    userInputDataSchema: {
-                        type: 'object',
-                        properties: {
-                            backgroundColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            fontColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            winningNumberBackgroundColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            winningNumberFontColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            roundNumberFontColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            nextDrawFontColor: {
-                                type: 'string',
-                                format: 'color'
-                            }
-                        }
-                    }
+                    userInputDataSchema: themeSchema
                 }
             ];
             return actions;
