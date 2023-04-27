@@ -16,6 +16,8 @@ declare module "@scom/scom-randomizer/global/index.ts" {
         numberOfValues?: number;
         from?: number;
         to?: number;
+        showHeader?: boolean;
+        showFooter?: boolean;
     }
 }
 /// <amd-module name="@scom/scom-randomizer/index.css.ts" />
@@ -36,6 +38,8 @@ declare module "@scom/scom-randomizer" {
         numberOfValues?: number;
         from?: number;
         to?: number;
+        showHeader?: boolean;
+        showFooter?: boolean;
     }
     global {
         namespace JSX {
@@ -57,6 +61,7 @@ declare module "@scom/scom-randomizer" {
         private lbReleasedDays;
         private lbReleasedHours;
         private lbReleasedMins;
+        private dappContainer;
         private timer;
         private oldTag;
         tag: any;
@@ -72,12 +77,16 @@ declare module "@scom/scom-randomizer" {
         set from(value: number);
         get to(): number;
         set to(value: number);
+        get showFooter(): boolean;
+        set showFooter(value: boolean);
+        get showHeader(): boolean;
+        set showHeader(value: boolean);
         getData(): Promise<IConfig>;
         setData(value: IConfig): Promise<void>;
         refreshApp(): Promise<void>;
         getTag(): any;
         private updateTag;
-        setTag(value: any): Promise<void>;
+        setTag(value: any, init?: boolean): Promise<void>;
         private updateStyle;
         private updateTheme;
         getPropertiesSchema(): {
