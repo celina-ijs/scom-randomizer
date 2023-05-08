@@ -348,6 +348,26 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                 }
             };
         }
+        getConfigurators() {
+            return [
+                {
+                    name: 'Builder Configurator',
+                    target: 'Builders',
+                    getActions: this.getActions.bind(this),
+                    getData: this.getData.bind(this),
+                    getTag: this.getTag.bind(this),
+                    setData: this.setData.bind(this)
+                },
+                {
+                    name: 'Emdedder Configurator',
+                    target: 'Embedders',
+                    getActions: this.getEmbedderActions.bind(this),
+                    getData: this.getData.bind(this),
+                    getTag: this.getTag.bind(this),
+                    setData: this.setData.bind(this)
+                }
+            ];
+        }
         getEmbedderActions() {
             const propertiesSchema = this.getPropertiesSchema();
             const themeSchema = {
@@ -542,7 +562,8 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                             execute: async () => {
                                 if (!userInputData)
                                     return;
-                                this.oldTag = Object.assign({}, this.tag);
+                                this.oldTag = JSON.parse(JSON.stringify(this.tag));
+                                console.log('tag', this.tag, userInputData);
                                 if (builder)
                                     builder.setTag(userInputData);
                                 else
@@ -553,7 +574,8 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                             undo: () => {
                                 if (!userInputData)
                                     return;
-                                this.tag = Object.assign({}, this.oldTag);
+                                this.tag = JSON.parse(JSON.stringify(this.oldTag));
+                                console.log('old tag', this.tag);
                                 if (builder)
                                     builder.setTag(this.tag);
                                 else
