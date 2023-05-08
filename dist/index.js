@@ -348,6 +348,26 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                 }
             };
         }
+        getConfigurators() {
+            return [
+                {
+                    name: 'Builder Configurator',
+                    target: 'Builders',
+                    getActions: this.getActions.bind(this),
+                    getData: this.getData.bind(this),
+                    getTag: this.getTag.bind(this),
+                    setData: this.setData.bind(this)
+                },
+                {
+                    name: 'Emdedder Configurator',
+                    target: 'Embedders',
+                    getActions: this.getEmbedderActions.bind(this),
+                    getData: this.getData.bind(this),
+                    getTag: this.getTag.bind(this),
+                    setData: this.setData.bind(this)
+                }
+            ];
+        }
         getEmbedderActions() {
             const propertiesSchema = this.getPropertiesSchema();
             const themeSchema = {

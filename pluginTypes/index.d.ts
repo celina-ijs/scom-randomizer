@@ -30,8 +30,7 @@ declare module "@scom/scom-randomizer/utils.ts" {
 }
 /// <amd-module name="@scom/scom-randomizer" />
 declare module "@scom/scom-randomizer" {
-    import { Module, ControlElement, Container, IDataSchema } from "@ijstech/components";
-    import { IConfig, PageBlock } from "@scom/scom-randomizer/global/index.ts";
+    import { Module, ControlElement, Container } from "@ijstech/components";
     import "@scom/scom-randomizer/index.css.ts";
     interface ScomRandomizerElement extends ControlElement {
         releaseUTCTime?: string;
@@ -48,7 +47,7 @@ declare module "@scom/scom-randomizer" {
             }
         }
     }
-    export default class ScomRandomizer extends Module implements PageBlock {
+    export default class ScomRandomizer extends Module {
         private _oldData;
         private _data;
         private lbRound;
@@ -81,63 +80,26 @@ declare module "@scom/scom-randomizer" {
         set showFooter(value: boolean);
         get showHeader(): boolean;
         set showHeader(value: boolean);
-        getData(): Promise<IConfig>;
-        setData(value: IConfig): Promise<void>;
-        refreshApp(): Promise<void>;
-        getTag(): any;
+        private getData;
+        private setData;
+        private refreshApp;
+        private getTag;
         private updateTag;
-        setTag(value: any, init?: boolean): Promise<void>;
+        private setTag;
         private updateStyle;
         private updateTheme;
-        getPropertiesSchema(): {
-            type: string;
-            properties: {
-                releaseUTCTime: {
-                    title: string;
-                    type: string;
-                    format: string;
-                };
-                numberOfValues: {
-                    type: string;
-                };
-                from: {
-                    type: string;
-                };
-                to: {
-                    type: string;
-                };
-            };
-        };
-        getEmbedderActions(): {
+        private getPropertiesSchema;
+        getConfigurators(): {
             name: string;
-            icon: string;
-            command: (builder: any, userInputData: any) => {
-                execute: () => Promise<void>;
-                undo: () => void;
-                redo: () => void;
-            };
-            userInputDataSchema: IDataSchema;
+            target: string;
+            getActions: any;
+            getData: any;
+            getTag: any;
+            setData: any;
         }[];
-        getActions(): {
-            name: string;
-            icon: string;
-            command: (builder: any, userInputData: any) => {
-                execute: () => Promise<void>;
-                undo: () => void;
-                redo: () => void;
-            };
-            userInputDataSchema: IDataSchema;
-        }[];
-        _getActions(propertiesSchema: IDataSchema, themeSchema: IDataSchema): {
-            name: string;
-            icon: string;
-            command: (builder: any, userInputData: any) => {
-                execute: () => Promise<void>;
-                undo: () => void;
-                redo: () => void;
-            };
-            userInputDataSchema: IDataSchema;
-        }[];
+        private getEmbedderActions;
+        private getActions;
+        private _getActions;
         render(): any;
     }
 }

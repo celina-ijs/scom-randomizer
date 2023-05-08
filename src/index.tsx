@@ -12,7 +12,7 @@ import {
   IDataSchema
 } from "@ijstech/components";
 import {} from '@ijstech/eth-contract'
-import { IConfig, PageBlock } from "./global/index";
+import { IConfig } from "./global/index";
 import './index.css';
 import { getRoundByReleaseTime, getRandomizerResult } from "./utils";
 import ScomDappContainer from "@scom/scom-dapp-container";
@@ -37,7 +37,7 @@ declare global {
 
 @customModule
 @customElements('i-scom-randomizer')
-export default class ScomRandomizer extends Module implements PageBlock {
+export default class ScomRandomizer extends Module {
   private _oldData: IConfig = {};
   private _data: IConfig = {};
   private lbRound: Label;
@@ -162,11 +162,11 @@ export default class ScomRandomizer extends Module implements PageBlock {
     if (this.dappContainer) this.dappContainer.showHeader = this.showHeader;
   }
 
-  async getData() {
+  private async getData() {
     return this._data;
   }
 
-  async setData(value: IConfig) {
+  private async setData(value: IConfig) {
     this._data = value;
     if (this._data.releaseTime) {
       this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
@@ -177,7 +177,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
     await this.refreshApp();
   }
 
-  async refreshApp() {
+  private async refreshApp() {
     const data: any = {
       showWalletNetwork: false,
       showHeader: this._data.showHeader ?? true,
@@ -245,7 +245,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
     }
   }
 
-  getTag() {
+  private getTag() {
     return this.tag;
   }
 
@@ -257,7 +257,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
     }
   }
 
-  async setTag(value: any, init?: boolean) {
+  private async setTag(value: any, init?: boolean) {
     const newValue = value || {};
     if (newValue.light) this.updateTag('light', newValue.light);
     if (newValue.dark) this.updateTag('dark', newValue.dark);
@@ -281,7 +281,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
     this.updateStyle('--text-secondary', this.tag[themeVar]?.nextDrawFontColor);
   }
 
-  getPropertiesSchema() {
+  private getPropertiesSchema() {
     return {
       type: 'object',
       properties: {
@@ -307,7 +307,28 @@ export default class ScomRandomizer extends Module implements PageBlock {
     }
   }
 
-  getEmbedderActions() {
+  getConfigurators() {
+    return [
+      {
+        name: 'Builder Configurator',
+        target: 'Builders',
+        getActions: this.getActions.bind(this),
+        getData: this.getData.bind(this),
+        getTag: this.getTag.bind(this),
+        setData: this.setData.bind(this)
+      },
+      {
+        name: 'Emdedder Configurator',
+        target: 'Embedders',
+        getActions: this.getEmbedderActions.bind(this),
+        getData: this.getData.bind(this),
+        getTag: this.getTag.bind(this),
+        setData: this.setData.bind(this)
+      }
+    ]
+  }
+
+  private getEmbedderActions() {
     const propertiesSchema = this.getPropertiesSchema() as IDataSchema;
     const themeSchema: IDataSchema = {
       type: 'object',
@@ -387,7 +408,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
     return this._getActions(propertiesSchema, themeSchema);
   }
   
-  getActions() {
+  private getActions() {
     const propertiesSchema = this.getPropertiesSchema() as IDataSchema;
     const themeSchema: IDataSchema = {
       type: 'object',
@@ -455,7 +476,7 @@ export default class ScomRandomizer extends Module implements PageBlock {
     return this._getActions(propertiesSchema, themeSchema);
   }
 
-  _getActions(propertiesSchema: IDataSchema, themeSchema: IDataSchema) {
+  private _getActions(propertiesSchema: IDataSchema, themeSchema: IDataSchema) {
     const actions = [
       {
         name: 'Settings',
