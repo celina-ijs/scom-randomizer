@@ -59,7 +59,6 @@ declare module "@scom/scom-randomizer" {
         }
     }
     export default class ScomRandomizer extends Module {
-        private _oldData;
         private _data;
         private lbRound;
         private lbDrawTime;
@@ -73,7 +72,6 @@ declare module "@scom/scom-randomizer" {
         private lbReleasedMins;
         private dappContainer;
         private timer;
-        private oldTag;
         tag: any;
         init(): Promise<void>;
         private initTag;

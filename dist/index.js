@@ -106,12 +106,11 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_2.Styles.Theme.ThemeVars;
+    const RELEASE_UTC_TIME_FORMAT = 'MM/DD/YYYY HH:ss'; // 'YYYY-MM-DDTHH:mm:ss[Z]'
     let ScomRandomizer = class ScomRandomizer extends components_2.Module {
         constructor() {
             super(...arguments);
-            this._oldData = {};
             this._data = {};
-            this.oldTag = {};
             this.tag = {};
         }
         async init() {
@@ -147,7 +146,6 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                 dark: getColors(components_2.Styles.Theme.darkTheme),
                 light: getColors(components_2.Styles.Theme.defaultTheme)
             };
-            this.oldTag = Object.assign({}, defaultTag);
             this.setTag(defaultTag, true);
         }
         static async create(options, parent) {
@@ -217,7 +215,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
         async setData(value) {
             this._data = value;
             if (this._data.releaseTime) {
-                this._data.releaseUTCTime = components_2.moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+                this._data.releaseUTCTime = components_2.moment(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
             }
             if (!this._data.round && this._data.releaseTime) {
                 this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
@@ -452,18 +450,8 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                     getData: this.getData.bind(this),
                     setData: async (data) => {
                         const defaultData = data_json_1.default.defaultBuilderData;
-                        defaultData.releaseUTCTime = components_2.moment().format('DD/MM/YYYY HH:mm');
-                        this._data = Object.assign(Object.assign({}, defaultData), data);
-                        if (this._data.releaseUTCTime && !this._data.releaseTime) {
-                            this.setReleaseTime();
-                        }
-                        if (this._data.releaseTime && !this._data.releaseUTCTime) {
-                            this._data.releaseUTCTime = components_2.moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-                        }
-                        if (!this._data.round && this._data.releaseTime) {
-                            this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
-                        }
-                        await this.refreshApp();
+                        defaultData.releaseTime = components_2.moment().add(7, 'days').valueOf();
+                        await this.setData(Object.assign(Object.assign({}, defaultData), data));
                     },
                     setTag: this.setTag.bind(this),
                     getTag: this.getTag.bind(this)
@@ -489,16 +477,17 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                     name: 'Settings',
                     icon: 'cog',
                     command: (builder, userInputData) => {
+                        let oldData = {};
                         return {
                             execute: async () => {
-                                this._oldData = Object.assign({}, this._data);
+                                oldData = Object.assign({}, this._data);
                                 if (userInputData.releaseUTCTime !== undefined) {
                                     this._data.releaseUTCTime = userInputData.releaseUTCTime;
                                     this.setReleaseTime();
                                 }
                                 if (userInputData.releaseTime != undefined) {
                                     this._data.releaseTime = userInputData.releaseTime;
-                                    this._data.releaseUTCTime = components_2.moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+                                    this._data.releaseUTCTime = components_2.moment(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
                                 }
                                 if (userInputData.numberOfValues != undefined)
                                     this._data.numberOfValues = userInputData.numberOfValues;
@@ -512,7 +501,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                                     builder.setData(this._data);
                             },
                             undo: async () => {
-                                this._data = Object.assign({}, this._oldData);
+                                this._data = Object.assign({}, oldData);
                                 this._data.round = this._data.releaseTime ? await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime)) : 0;
                                 await this.refreshApp();
                                 if (builder === null || builder === void 0 ? void 0 : builder.setData)
@@ -527,11 +516,12 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                     name: 'Theme Settings',
                     icon: 'palette',
                     command: (builder, userInputData) => {
+                        let oldTag = {};
                         return {
                             execute: async () => {
                                 if (!userInputData)
                                     return;
-                                this.oldTag = JSON.parse(JSON.stringify(this.tag));
+                                oldTag = JSON.parse(JSON.stringify(this.tag));
                                 if (builder)
                                     builder.setTag(userInputData);
                                 else
@@ -542,7 +532,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                             undo: () => {
                                 if (!userInputData)
                                     return;
-                                this.tag = JSON.parse(JSON.stringify(this.oldTag));
+                                this.tag = JSON.parse(JSON.stringify(oldTag));
                                 if (builder)
                                     builder.setTag(this.tag);
                                 else

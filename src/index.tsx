@@ -27,6 +27,7 @@ interface ScomRandomizerElement extends ControlElement {
   showFooter?: boolean;
 }
 const Theme = Styles.Theme.ThemeVars;
+const RELEASE_UTC_TIME_FORMAT = 'MM/DD/YYYY HH:ss'; // 'YYYY-MM-DDTHH:mm:ss[Z]'
 
 declare global {
   namespace JSX {
@@ -39,7 +40,6 @@ declare global {
 @customModule
 @customElements('i-scom-randomizer')
 export default class ScomRandomizer extends Module {
-  private _oldData: IConfig = {};
   private _data: IConfig = {};
   private lbRound: Label;
   private lbDrawTime: Label;
@@ -53,7 +53,6 @@ export default class ScomRandomizer extends Module {
   private lbReleasedMins: Label;
   private dappContainer: ScomDappContainer;
   private timer: any;
-  private oldTag: any = {};
   tag: any = {};
 
   async init() {
@@ -90,7 +89,6 @@ export default class ScomRandomizer extends Module {
       dark: getColors(Styles.Theme.darkTheme),
       light: getColors(Styles.Theme.defaultTheme)
     }
-    this.oldTag = {...defaultTag};
     this.setTag(defaultTag, true);
   }
 
@@ -170,7 +168,7 @@ export default class ScomRandomizer extends Module {
   private async setData(value: IConfig) {
     this._data = value;
     if (this._data.releaseTime) {
-      this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+      this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
     }
     if (!this._data.round && this._data.releaseTime) {
       this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
@@ -401,21 +399,8 @@ export default class ScomRandomizer extends Module {
         getData: this.getData.bind(this),
         setData: async (data: IConfig) => {
           const defaultData = dataJson.defaultBuilderData as any;
-          defaultData.releaseUTCTime = moment().format('DD/MM/YYYY HH:mm');
-          this._data = {...defaultData, ...data};
-          if (this._data.releaseUTCTime && !this._data.releaseTime) {
-            this.setReleaseTime();
-          }
-
-          if (this._data.releaseTime && !this._data.releaseUTCTime) {
-            this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
-          }
-
-          if (!this._data.round && this._data.releaseTime) {
-            this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
-          }
-
-          await this.refreshApp();
+          defaultData.releaseTime = moment().add(7, 'days').valueOf();
+          await this.setData({...defaultData, ...data});
         },
         setTag: this.setTag.bind(this),
         getTag: this.getTag.bind(this)
@@ -442,16 +427,17 @@ export default class ScomRandomizer extends Module {
         name: 'Settings',
         icon: 'cog',
         command: (builder: any, userInputData: any) => {
+          let oldData = {};
           return {
             execute: async () => {
-              this._oldData = {...this._data};
+              oldData = {...this._data};
               if (userInputData.releaseUTCTime !== undefined) {
                 this._data.releaseUTCTime = userInputData.releaseUTCTime;
                 this.setReleaseTime();
               }
               if (userInputData.releaseTime != undefined) {
                 this._data.releaseTime = userInputData.releaseTime;
-                this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+                this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
               }
               if (userInputData.numberOfValues != undefined) this._data.numberOfValues = userInputData.numberOfValues;
               if (userInputData.from != undefined) this._data.from = userInputData.from;
@@ -461,7 +447,7 @@ export default class ScomRandomizer extends Module {
               if (builder?.setData) builder.setData(this._data);
             },
             undo: async () => {
-              this._data = {...this._oldData};
+              this._data = {...oldData};
               this._data.round = this._data.releaseTime ? await getRoundByReleaseTime(Number(this._data.releaseTime)) : 0;
               await this.refreshApp();
               if (builder?.setData) builder.setData(this._data);
@@ -475,17 +461,18 @@ export default class ScomRandomizer extends Module {
         name: 'Theme Settings',
         icon: 'palette',
         command: (builder: any, userInputData: any) => {
+          let oldTag = {};
           return {
             execute: async () => {
               if (!userInputData) return;
-              this.oldTag = JSON.parse(JSON.stringify(this.tag));
+              oldTag = JSON.parse(JSON.stringify(this.tag));
               if (builder) builder.setTag(userInputData);
               else this.setTag(userInputData);
               if (this.dappContainer) this.dappContainer.setTag(userInputData);
             },
             undo: () => {
               if (!userInputData) return;
-              this.tag = JSON.parse(JSON.stringify(this.oldTag));
+              this.tag = JSON.parse(JSON.stringify(oldTag));
               if (builder) builder.setTag(this.tag);
               else this.setTag(this.tag);
               if (this.dappContainer) this.dappContainer.setTag(this.tag);
