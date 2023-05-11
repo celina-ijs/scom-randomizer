@@ -4,7 +4,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-define("@scom/scom-randomizer/global/index.ts", ["require", "exports"], function (require, exports) {
+define("@scom/scom-randomizer/interface.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
@@ -90,7 +90,19 @@ define("@scom/scom-randomizer/utils.ts", ["require", "exports", "@ijstech/eth-wa
     }
     exports.getRoundByReleaseTime = getRoundByReleaseTime;
 });
-define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@scom/scom-randomizer/utils.ts", "@scom/scom-randomizer/index.css.ts"], function (require, exports, components_2, utils_1) {
+define("@scom/scom-randomizer/data.json.ts", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    ///<amd-module name='@scom/scom-randomizer/data.json.ts'/> 
+    exports.default = {
+        defaultBuilderData: {
+            numberOfValues: 10,
+            from: 1,
+            to: 20
+        }
+    };
+});
+define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@scom/scom-randomizer/utils.ts", "@scom/scom-randomizer/data.json.ts", "@scom/scom-randomizer/index.css.ts"], function (require, exports, components_2, utils_1, data_json_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_2.Styles.Theme.ThemeVars;
@@ -324,7 +336,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             this.updateStyle('--text-secondary', (_g = this.tag[themeVar]) === null || _g === void 0 ? void 0 : _g.nextDrawFontColor);
         }
         getPropertiesSchema() {
-            return {
+            const schema = {
                 type: 'object',
                 properties: {
                     "releaseUTCTime": {
@@ -347,172 +359,129 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                     }
                 }
             };
+            return schema;
+        }
+        getThemeSchema(readOnly = false) {
+            const themeSchema = {
+                type: 'object',
+                properties: {
+                    dark: {
+                        type: 'object',
+                        properties: {
+                            backgroundColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly
+                            },
+                            fontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly
+                            },
+                            winningNumberBackgroundColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly
+                            },
+                            winningNumberFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly
+                            },
+                            roundNumberFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly
+                            },
+                            nextDrawFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly
+                            }
+                        }
+                    },
+                    light: {
+                        type: 'object',
+                        properties: {
+                            backgroundColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            fontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            winningNumberBackgroundColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            winningNumberFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            roundNumberFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            },
+                            nextDrawFontColor: {
+                                type: 'string',
+                                format: 'color',
+                                readOnly: true
+                            }
+                        }
+                    }
+                }
+            };
+            return themeSchema;
         }
         getConfigurators() {
             return [
                 {
                     name: 'Builder Configurator',
                     target: 'Builders',
-                    getActions: this.getActions.bind(this),
+                    getActions: () => {
+                        const propertiesSchema = this.getPropertiesSchema();
+                        const themeSchema = this.getThemeSchema();
+                        return this._getActions(propertiesSchema, themeSchema);
+                    },
                     getData: this.getData.bind(this),
-                    getTag: this.getTag.bind(this),
-                    setData: this.setData.bind(this)
+                    setData: async (data) => {
+                        const defaultData = data_json_1.default.defaultBuilderData;
+                        defaultData.releaseUTCTime = components_2.moment().format('DD/MM/YYYY HH:mm');
+                        this._data = Object.assign(Object.assign({}, defaultData), data);
+                        if (this._data.releaseUTCTime && !this._data.releaseTime) {
+                            this.setReleaseTime();
+                        }
+                        if (this._data.releaseTime && !this._data.releaseUTCTime) {
+                            this._data.releaseUTCTime = components_2.moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+                        }
+                        if (!this._data.round && this._data.releaseTime) {
+                            this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
+                        }
+                        await this.refreshApp();
+                    },
+                    setTag: this.setTag.bind(this),
+                    getTag: this.getTag.bind(this)
                 },
                 {
                     name: 'Emdedder Configurator',
                     target: 'Embedders',
-                    getActions: this.getEmbedderActions.bind(this),
+                    getActions: () => {
+                        const propertiesSchema = this.getPropertiesSchema();
+                        const themeSchema = this.getThemeSchema(true);
+                        return this._getActions(propertiesSchema, themeSchema);
+                    },
                     getData: this.getData.bind(this),
-                    getTag: this.getTag.bind(this),
-                    setData: this.setData.bind(this)
+                    setData: this.setData.bind(this),
+                    setTag: this.setTag.bind(this),
+                    getTag: this.getTag.bind(this)
                 }
             ];
-        }
-        getEmbedderActions() {
-            const propertiesSchema = this.getPropertiesSchema();
-            const themeSchema = {
-                type: 'object',
-                properties: {
-                    dark: {
-                        type: 'object',
-                        properties: {
-                            backgroundColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            fontColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            winningNumberBackgroundColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            winningNumberFontColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            roundNumberFontColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            nextDrawFontColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            }
-                        }
-                    },
-                    light: {
-                        type: 'object',
-                        properties: {
-                            backgroundColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            fontColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            winningNumberBackgroundColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            winningNumberFontColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            roundNumberFontColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            },
-                            nextDrawFontColor: {
-                                type: 'string',
-                                format: 'color',
-                                readOnly: true
-                            }
-                        }
-                    }
-                }
-            };
-            return this._getActions(propertiesSchema, themeSchema);
-        }
-        getActions() {
-            const propertiesSchema = this.getPropertiesSchema();
-            const themeSchema = {
-                type: 'object',
-                properties: {
-                    dark: {
-                        type: 'object',
-                        properties: {
-                            backgroundColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            fontColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            winningNumberBackgroundColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            winningNumberFontColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            roundNumberFontColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            nextDrawFontColor: {
-                                type: 'string',
-                                format: 'color'
-                            }
-                        }
-                    },
-                    light: {
-                        type: 'object',
-                        properties: {
-                            backgroundColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            fontColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            winningNumberBackgroundColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            winningNumberFontColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            roundNumberFontColor: {
-                                type: 'string',
-                                format: 'color'
-                            },
-                            nextDrawFontColor: {
-                                type: 'string',
-                                format: 'color'
-                            }
-                        }
-                    }
-                }
-            };
-            return this._getActions(propertiesSchema, themeSchema);
         }
         _getActions(propertiesSchema, themeSchema) {
             const actions = [
@@ -563,7 +532,6 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                                 if (!userInputData)
                                     return;
                                 this.oldTag = JSON.parse(JSON.stringify(this.tag));
-                                console.log('tag', this.tag, userInputData);
                                 if (builder)
                                     builder.setTag(userInputData);
                                 else
@@ -575,7 +543,6 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                                 if (!userInputData)
                                     return;
                                 this.tag = JSON.parse(JSON.stringify(this.oldTag));
-                                console.log('old tag', this.tag);
                                 if (builder)
                                     builder.setTag(this.tag);
                                 else

@@ -1,5 +1,5 @@
-/// <amd-module name="@scom/scom-randomizer/global/index.ts" />
-declare module "@scom/scom-randomizer/global/index.ts" {
+/// <amd-module name="@scom/scom-randomizer/interface.ts" />
+declare module "@scom/scom-randomizer/interface.ts" {
     export interface PageBlock {
         getData: () => any;
         setData: (data: any) => Promise<void>;
@@ -28,9 +28,20 @@ declare module "@scom/scom-randomizer/utils.ts" {
     function getRoundByReleaseTime(releaseTime: number): Promise<number>;
     export { getRandomizerResult, getRoundByReleaseTime };
 }
+/// <amd-module name="@scom/scom-randomizer/data.json.ts" />
+declare module "@scom/scom-randomizer/data.json.ts" {
+    const _default: {
+        defaultBuilderData: {
+            numberOfValues: number;
+            from: number;
+            to: number;
+        };
+    };
+    export default _default;
+}
 /// <amd-module name="@scom/scom-randomizer" />
 declare module "@scom/scom-randomizer" {
-    import { Module, ControlElement, Container } from "@ijstech/components";
+    import { Module, ControlElement, Container, IDataSchema } from "@ijstech/components";
     import "@scom/scom-randomizer/index.css.ts";
     interface ScomRandomizerElement extends ControlElement {
         releaseUTCTime?: string;
@@ -89,16 +100,25 @@ declare module "@scom/scom-randomizer" {
         private updateStyle;
         private updateTheme;
         private getPropertiesSchema;
+        private getThemeSchema;
         getConfigurators(): {
             name: string;
             target: string;
-            getActions: any;
+            getActions: () => {
+                name: string;
+                icon: string;
+                command: (builder: any, userInputData: any) => {
+                    execute: () => Promise<void>;
+                    undo: () => void;
+                    redo: () => void;
+                };
+                userInputDataSchema: IDataSchema;
+            }[];
             getData: any;
-            getTag: any;
             setData: any;
+            setTag: any;
+            getTag: any;
         }[];
-        private getEmbedderActions;
-        private getActions;
         private _getActions;
         render(): any;
     }

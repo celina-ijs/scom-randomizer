@@ -12,10 +12,11 @@ import {
   IDataSchema
 } from "@ijstech/components";
 import {} from '@ijstech/eth-contract'
-import { IConfig } from "./global/index";
+import { IConfig } from "./interface";
 import './index.css';
 import { getRoundByReleaseTime, getRandomizerResult } from "./utils";
 import ScomDappContainer from "@scom/scom-dapp-container";
+import dataJson from "./data.json";
 
 interface ScomRandomizerElement extends ControlElement {
   releaseUTCTime?: string;
@@ -282,7 +283,7 @@ export default class ScomRandomizer extends Module {
   }
 
   private getPropertiesSchema() {
-    return {
+    const schema: IDataSchema = {
       type: 'object',
       properties: {
         "releaseUTCTime": {
@@ -305,6 +306,86 @@ export default class ScomRandomizer extends Module {
         }
       }
     }
+    return schema;
+  }
+
+  private getThemeSchema(readOnly = false) {
+    const themeSchema: IDataSchema = {
+      type: 'object',
+      properties: {
+        dark: {
+          type: 'object',
+          properties: {
+            backgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            fontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            winningNumberBackgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            winningNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            roundNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            nextDrawFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            }
+          }
+        },
+        light: {
+          type: 'object',
+          properties: {
+            backgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            fontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            winningNumberBackgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            winningNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            roundNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            nextDrawFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            }
+          }
+        }
+      }
+    }
+    return themeSchema;
   }
 
   getConfigurators() {
@@ -312,168 +393,47 @@ export default class ScomRandomizer extends Module {
       {
         name: 'Builder Configurator',
         target: 'Builders',
-        getActions: this.getActions.bind(this),
+        getActions: () => {
+          const propertiesSchema = this.getPropertiesSchema();
+          const themeSchema = this.getThemeSchema();
+          return this._getActions(propertiesSchema, themeSchema);
+        },
         getData: this.getData.bind(this),
-        getTag: this.getTag.bind(this),
-        setData: this.setData.bind(this)
+        setData: async (data: IConfig) => {
+          const defaultData = dataJson.defaultBuilderData as any;
+          defaultData.releaseUTCTime = moment().format('DD/MM/YYYY HH:mm');
+          this._data = {...defaultData, ...data};
+          if (this._data.releaseUTCTime && !this._data.releaseTime) {
+            this.setReleaseTime();
+          }
+
+          if (this._data.releaseTime && !this._data.releaseUTCTime) {
+            this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+          }
+
+          if (!this._data.round && this._data.releaseTime) {
+            this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
+          }
+
+          await this.refreshApp();
+        },
+        setTag: this.setTag.bind(this),
+        getTag: this.getTag.bind(this)
       },
       {
         name: 'Emdedder Configurator',
         target: 'Embedders',
-        getActions: this.getEmbedderActions.bind(this),
+        getActions: () => {
+          const propertiesSchema = this.getPropertiesSchema();
+          const themeSchema = this.getThemeSchema(true);
+          return this._getActions(propertiesSchema, themeSchema);
+        },
         getData: this.getData.bind(this),
-        getTag: this.getTag.bind(this),
-        setData: this.setData.bind(this)
+        setData: this.setData.bind(this),
+        setTag: this.setTag.bind(this),
+        getTag: this.getTag.bind(this)
       }
     ]
-  }
-
-  private getEmbedderActions() {
-    const propertiesSchema = this.getPropertiesSchema() as IDataSchema;
-    const themeSchema: IDataSchema = {
-      type: 'object',
-      properties: {
-        dark: {
-          type: 'object',
-          properties: {
-            backgroundColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            fontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            winningNumberBackgroundColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            winningNumberFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            roundNumberFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            nextDrawFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            }
-          }
-        },
-        light: {
-          type: 'object',
-          properties: {
-            backgroundColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            fontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            winningNumberBackgroundColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            winningNumberFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            roundNumberFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            nextDrawFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            }
-          }
-        }
-      }
-    }
-    return this._getActions(propertiesSchema, themeSchema);
-  }
-  
-  private getActions() {
-    const propertiesSchema = this.getPropertiesSchema() as IDataSchema;
-    const themeSchema: IDataSchema = {
-      type: 'object',
-      properties: {
-        dark: {
-          type: 'object',
-          properties: {
-            backgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            fontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberBackgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            roundNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            nextDrawFontColor: {
-              type: 'string',
-              format: 'color'
-            }
-          }
-        },
-        light: {
-          type: 'object',
-          properties: {
-            backgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            fontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberBackgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            roundNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            nextDrawFontColor: {
-              type: 'string',
-              format: 'color'
-            }
-          }
-        }
-      }
-    }
-    return this._getActions(propertiesSchema, themeSchema);
   }
 
   private _getActions(propertiesSchema: IDataSchema, themeSchema: IDataSchema) {
