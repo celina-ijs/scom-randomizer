@@ -12,10 +12,11 @@ import {
   IDataSchema
 } from "@ijstech/components";
 import {} from '@ijstech/eth-contract'
-import { IConfig } from "./global/index";
+import { IConfig } from "./interface";
 import './index.css';
 import { getRoundByReleaseTime, getRandomizerResult } from "./utils";
 import ScomDappContainer from "@scom/scom-dapp-container";
+import dataJson from "./data.json";
 
 interface ScomRandomizerElement extends ControlElement {
   releaseUTCTime?: string;
@@ -26,6 +27,7 @@ interface ScomRandomizerElement extends ControlElement {
   showFooter?: boolean;
 }
 const Theme = Styles.Theme.ThemeVars;
+const RELEASE_UTC_TIME_FORMAT = 'MM/DD/YYYY HH:ss'; // 'YYYY-MM-DDTHH:mm:ss[Z]'
 
 declare global {
   namespace JSX {
@@ -38,7 +40,6 @@ declare global {
 @customModule
 @customElements('i-scom-randomizer')
 export default class ScomRandomizer extends Module {
-  private _oldData: IConfig = {};
   private _data: IConfig = {};
   private lbRound: Label;
   private lbDrawTime: Label;
@@ -52,7 +53,6 @@ export default class ScomRandomizer extends Module {
   private lbReleasedMins: Label;
   private dappContainer: ScomDappContainer;
   private timer: any;
-  private oldTag: any = {};
   tag: any = {};
 
   async init() {
@@ -89,7 +89,6 @@ export default class ScomRandomizer extends Module {
       dark: getColors(Styles.Theme.darkTheme),
       light: getColors(Styles.Theme.defaultTheme)
     }
-    this.oldTag = {...defaultTag};
     this.setTag(defaultTag, true);
   }
 
@@ -169,7 +168,7 @@ export default class ScomRandomizer extends Module {
   private async setData(value: IConfig) {
     this._data = value;
     if (this._data.releaseTime) {
-      this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+      this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
     }
     if (!this._data.round && this._data.releaseTime) {
       this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
@@ -282,7 +281,7 @@ export default class ScomRandomizer extends Module {
   }
 
   private getPropertiesSchema() {
-    return {
+    const schema: IDataSchema = {
       type: 'object',
       properties: {
         "releaseUTCTime": {
@@ -305,6 +304,86 @@ export default class ScomRandomizer extends Module {
         }
       }
     }
+    return schema;
+  }
+
+  private getThemeSchema(readOnly = false) {
+    const themeSchema: IDataSchema = {
+      type: 'object',
+      properties: {
+        dark: {
+          type: 'object',
+          properties: {
+            backgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            fontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            winningNumberBackgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            winningNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            roundNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            },
+            nextDrawFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly
+            }
+          }
+        },
+        light: {
+          type: 'object',
+          properties: {
+            backgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            fontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            winningNumberBackgroundColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            winningNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            roundNumberFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            },
+            nextDrawFontColor: {
+              type: 'string',
+              format: 'color',
+              readOnly: true
+            }
+          }
+        }
+      }
+    }
+    return themeSchema;
   }
 
   getConfigurators() {
@@ -312,168 +391,34 @@ export default class ScomRandomizer extends Module {
       {
         name: 'Builder Configurator',
         target: 'Builders',
-        getActions: this.getActions.bind(this),
+        getActions: () => {
+          const propertiesSchema = this.getPropertiesSchema();
+          const themeSchema = this.getThemeSchema();
+          return this._getActions(propertiesSchema, themeSchema);
+        },
         getData: this.getData.bind(this),
-        getTag: this.getTag.bind(this),
-        setData: this.setData.bind(this)
+        setData: async (data: IConfig) => {
+          const defaultData = dataJson.defaultBuilderData as any;
+          defaultData.releaseTime = moment().add(7, 'days').valueOf();
+          await this.setData({...defaultData, ...data});
+        },
+        setTag: this.setTag.bind(this),
+        getTag: this.getTag.bind(this)
       },
       {
         name: 'Emdedder Configurator',
         target: 'Embedders',
-        getActions: this.getEmbedderActions.bind(this),
+        getActions: () => {
+          const propertiesSchema = this.getPropertiesSchema();
+          const themeSchema = this.getThemeSchema(true);
+          return this._getActions(propertiesSchema, themeSchema);
+        },
         getData: this.getData.bind(this),
-        getTag: this.getTag.bind(this),
-        setData: this.setData.bind(this)
+        setData: this.setData.bind(this),
+        setTag: this.setTag.bind(this),
+        getTag: this.getTag.bind(this)
       }
     ]
-  }
-
-  private getEmbedderActions() {
-    const propertiesSchema = this.getPropertiesSchema() as IDataSchema;
-    const themeSchema: IDataSchema = {
-      type: 'object',
-      properties: {
-        dark: {
-          type: 'object',
-          properties: {
-            backgroundColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            fontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            winningNumberBackgroundColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            winningNumberFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            roundNumberFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            nextDrawFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            }
-          }
-        },
-        light: {
-          type: 'object',
-          properties: {
-            backgroundColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            fontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            winningNumberBackgroundColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            winningNumberFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            roundNumberFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            },
-            nextDrawFontColor: {
-              type: 'string',
-              format: 'color',
-              readOnly: true
-            }
-          }
-        }
-      }
-    }
-    return this._getActions(propertiesSchema, themeSchema);
-  }
-  
-  private getActions() {
-    const propertiesSchema = this.getPropertiesSchema() as IDataSchema;
-    const themeSchema: IDataSchema = {
-      type: 'object',
-      properties: {
-        dark: {
-          type: 'object',
-          properties: {
-            backgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            fontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberBackgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            roundNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            nextDrawFontColor: {
-              type: 'string',
-              format: 'color'
-            }
-          }
-        },
-        light: {
-          type: 'object',
-          properties: {
-            backgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            fontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberBackgroundColor: {
-              type: 'string',
-              format: 'color'
-            },
-            winningNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            roundNumberFontColor: {
-              type: 'string',
-              format: 'color'
-            },
-            nextDrawFontColor: {
-              type: 'string',
-              format: 'color'
-            }
-          }
-        }
-      }
-    }
-    return this._getActions(propertiesSchema, themeSchema);
   }
 
   private _getActions(propertiesSchema: IDataSchema, themeSchema: IDataSchema) {
@@ -482,16 +427,17 @@ export default class ScomRandomizer extends Module {
         name: 'Settings',
         icon: 'cog',
         command: (builder: any, userInputData: any) => {
+          let oldData = {};
           return {
             execute: async () => {
-              this._oldData = {...this._data};
+              oldData = {...this._data};
               if (userInputData.releaseUTCTime !== undefined) {
                 this._data.releaseUTCTime = userInputData.releaseUTCTime;
                 this.setReleaseTime();
               }
               if (userInputData.releaseTime != undefined) {
                 this._data.releaseTime = userInputData.releaseTime;
-                this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).utc().format('YYYY-MM-DDTHH:mm:ss[Z]');
+                this._data.releaseUTCTime = moment(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
               }
               if (userInputData.numberOfValues != undefined) this._data.numberOfValues = userInputData.numberOfValues;
               if (userInputData.from != undefined) this._data.from = userInputData.from;
@@ -501,7 +447,7 @@ export default class ScomRandomizer extends Module {
               if (builder?.setData) builder.setData(this._data);
             },
             undo: async () => {
-              this._data = {...this._oldData};
+              this._data = {...oldData};
               this._data.round = this._data.releaseTime ? await getRoundByReleaseTime(Number(this._data.releaseTime)) : 0;
               await this.refreshApp();
               if (builder?.setData) builder.setData(this._data);
@@ -515,17 +461,18 @@ export default class ScomRandomizer extends Module {
         name: 'Theme Settings',
         icon: 'palette',
         command: (builder: any, userInputData: any) => {
+          let oldTag = {};
           return {
             execute: async () => {
               if (!userInputData) return;
-              this.oldTag = JSON.parse(JSON.stringify(this.tag));
+              oldTag = JSON.parse(JSON.stringify(this.tag));
               if (builder) builder.setTag(userInputData);
               else this.setTag(userInputData);
               if (this.dappContainer) this.dappContainer.setTag(userInputData);
             },
             undo: () => {
               if (!userInputData) return;
-              this.tag = JSON.parse(JSON.stringify(this.oldTag));
+              this.tag = JSON.parse(JSON.stringify(oldTag));
               if (builder) builder.setTag(this.tag);
               else this.setTag(this.tag);
               if (this.dappContainer) this.dappContainer.setTag(this.tag);
