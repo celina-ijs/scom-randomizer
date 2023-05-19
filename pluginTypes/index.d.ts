@@ -42,6 +42,7 @@ declare module "@scom/scom-randomizer/data.json.ts" {
 /// <amd-module name="@scom/scom-randomizer" />
 declare module "@scom/scom-randomizer" {
     import { Module, ControlElement, Container, IDataSchema } from "@ijstech/components";
+    import { IConfig } from "@scom/scom-randomizer/interface.ts";
     import "@scom/scom-randomizer/index.css.ts";
     interface ScomRandomizerElement extends ControlElement {
         releaseUTCTime?: string;
@@ -99,7 +100,7 @@ declare module "@scom/scom-randomizer" {
         private updateTheme;
         private getPropertiesSchema;
         private getThemeSchema;
-        getConfigurators(): {
+        getConfigurators(): ({
             name: string;
             target: string;
             getActions: () => {
@@ -113,10 +114,33 @@ declare module "@scom/scom-randomizer" {
                 userInputDataSchema: IDataSchema;
             }[];
             getData: any;
+            setData: (data: IConfig) => Promise<void>;
+            setTag: any;
+            getTag: any;
+            getLinkParams?: undefined;
+            setLinkParams?: undefined;
+        } | {
+            name: string;
+            target: string;
+            getActions: () => {
+                name: string;
+                icon: string;
+                command: (builder: any, userInputData: any) => {
+                    execute: () => Promise<void>;
+                    undo: () => void;
+                    redo: () => void;
+                };
+                userInputDataSchema: IDataSchema;
+            }[];
+            getLinkParams: () => {
+                data: string;
+            };
+            setLinkParams: (params: any) => Promise<void>;
+            getData: any;
             setData: any;
             setTag: any;
             getTag: any;
-        }[];
+        })[];
         private _getActions;
         render(): any;
     }
