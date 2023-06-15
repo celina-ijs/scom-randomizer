@@ -117,17 +117,20 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             this.isReadyCallbackQueued = true;
             super.init();
             this.initTag();
-            this._data.releaseUTCTime = this.getAttribute('releaseUTCTime', true);
-            this._data.numberOfValues = this.getAttribute('numberOfValues', true);
-            this._data.from = this.getAttribute('from', true);
-            this._data.to = this.getAttribute('to', true);
-            this._data.showHeader = this.getAttribute('showHeader', true);
-            this._data.showFooter = this.getAttribute('showFooter', true);
-            this.setReleaseTime();
-            if (!this._data.round && this._data.releaseTime) {
-                this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
+            const lazyLoad = this.getAttribute('lazyLoad', true, false);
+            if (!lazyLoad) {
+                this._data.releaseUTCTime = this.getAttribute('releaseUTCTime', true);
+                this._data.numberOfValues = this.getAttribute('numberOfValues', true);
+                this._data.from = this.getAttribute('from', true);
+                this._data.to = this.getAttribute('to', true);
+                this._data.showHeader = this.getAttribute('showHeader', true);
+                this._data.showFooter = this.getAttribute('showFooter', true);
+                this.setReleaseTime();
+                if (!this._data.round && this._data.releaseTime) {
+                    this._data.round = await (0, utils_1.getRoundByReleaseTime)(Number(this._data.releaseTime));
+                }
+                await this.refreshApp();
             }
-            await this.refreshApp();
             this.isReadyCallbackQueued = false;
             this.executeReadyCallback();
         }
@@ -164,7 +167,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
             this._data.releaseUTCTime = value;
             this.setReleaseTime();
             if (!this._data.round && this._data.releaseTime) {
-                utils_1.getRoundByReleaseTime(Number(this._data.releaseTime)).then(round => {
+                (0, utils_1.getRoundByReleaseTime)(Number(this._data.releaseTime)).then(round => {
                     this._data.round = round;
                     this.refreshApp();
                 });
@@ -215,10 +218,10 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
         async setData(value) {
             this._data = value;
             if (this._data.releaseTime) {
-                this._data.releaseUTCTime = components_2.moment(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
+                this._data.releaseUTCTime = (0, components_2.moment)(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
             }
             if (!this._data.round && this._data.releaseTime) {
-                this._data.round = await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime));
+                this._data.round = await (0, utils_1.getRoundByReleaseTime)(Number(this._data.releaseTime));
             }
             await this.refreshApp();
         }
@@ -249,14 +252,14 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                 this.hstackCountdown.visible = true;
                 if (!this.lbReleaseTime.isConnected)
                     await this.lbReleaseTime.ready();
-                this.lbReleaseTime.caption = components_2.moment(Number(this._data.releaseTime)).format('YYYY-MM-DD HH:mm');
+                this.lbReleaseTime.caption = (0, components_2.moment)(Number(this._data.releaseTime)).format('YYYY-MM-DD HH:mm');
                 if (this.timer) {
                     clearInterval(this.timer);
                 }
                 const refreshCountdown = async () => {
-                    const days = components_2.moment(Number(this._data.releaseTime)).diff(components_2.moment(), 'days');
-                    const hours = components_2.moment(Number(this._data.releaseTime)).diff(components_2.moment(), 'hours') - days * 24;
-                    const mins = components_2.moment(Number(this._data.releaseTime)).diff(components_2.moment(), 'minutes') - days * 24 * 60 - hours * 60;
+                    const days = (0, components_2.moment)(Number(this._data.releaseTime)).diff((0, components_2.moment)(), 'days');
+                    const hours = (0, components_2.moment)(Number(this._data.releaseTime)).diff((0, components_2.moment)(), 'hours') - days * 24;
+                    const mins = (0, components_2.moment)(Number(this._data.releaseTime)).diff((0, components_2.moment)(), 'minutes') - days * 24 * 60 - hours * 60;
                     if (!this.lbReleasedDays.isConnected)
                         await this.lbReleasedDays.ready();
                     if (!this.lbReleasedHours.isConnected)
@@ -279,7 +282,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                 this.lbDrawTime.font = { size: '1.5rem', weight: 500, color: Theme.colors.primary.main };
                 this.lbDrawTime.lineHeight = '1.758rem';
                 if (this._data.round && this._data.numberOfValues) {
-                    const result = await utils_1.getRandomizerResult(this._data.round, this._data.numberOfValues, this._data.from, this._data.to);
+                    const result = await (0, utils_1.getRandomizerResult)(this._data.round, this._data.numberOfValues, this._data.from, this._data.to);
                     this.gridResults.clearInnerHTML();
                     for (let value of result) {
                         let label = await components_2.Label.create({
@@ -451,7 +454,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                     getData: this.getData.bind(this),
                     setData: async (data) => {
                         const defaultData = data_json_1.default.defaultBuilderData;
-                        defaultData.releaseTime = components_2.moment().add(7, 'days').valueOf();
+                        defaultData.releaseTime = (0, components_2.moment)().add(7, 'days').valueOf();
                         await this.setData(Object.assign(Object.assign({}, defaultData), data));
                     },
                     setTag: this.setTag.bind(this),
@@ -503,7 +506,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                                 }
                                 if (userInputData.releaseTime != undefined) {
                                     this._data.releaseTime = userInputData.releaseTime;
-                                    this._data.releaseUTCTime = components_2.moment(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
+                                    this._data.releaseUTCTime = (0, components_2.moment)(Number(this._data.releaseTime)).format(RELEASE_UTC_TIME_FORMAT);
                                 }
                                 if (userInputData.numberOfValues != undefined)
                                     this._data.numberOfValues = userInputData.numberOfValues;
@@ -511,14 +514,14 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
                                     this._data.from = userInputData.from;
                                 if (userInputData.to != undefined)
                                     this._data.to = userInputData.to;
-                                this._data.round = this._data.releaseTime ? await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime)) : 0;
+                                this._data.round = this._data.releaseTime ? await (0, utils_1.getRoundByReleaseTime)(Number(this._data.releaseTime)) : 0;
                                 await this.refreshApp();
                                 if (builder === null || builder === void 0 ? void 0 : builder.setData)
                                     builder.setData(this._data);
                             },
                             undo: async () => {
                                 this._data = Object.assign({}, oldData);
-                                this._data.round = this._data.releaseTime ? await utils_1.getRoundByReleaseTime(Number(this._data.releaseTime)) : 0;
+                                this._data.round = this._data.releaseTime ? await (0, utils_1.getRoundByReleaseTime)(Number(this._data.releaseTime)) : 0;
                                 await this.refreshApp();
                                 if (builder === null || builder === void 0 ? void 0 : builder.setData)
                                     builder.setData(this._data);
@@ -595,7 +598,7 @@ define("@scom/scom-randomizer", ["require", "exports", "@ijstech/components", "@
     };
     ScomRandomizer = __decorate([
         components_2.customModule,
-        components_2.customElements('i-scom-randomizer')
+        (0, components_2.customElements)('i-scom-randomizer')
     ], ScomRandomizer);
     exports.default = ScomRandomizer;
 });

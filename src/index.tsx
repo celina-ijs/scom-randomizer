@@ -19,6 +19,7 @@ import ScomDappContainer from "@scom/scom-dapp-container";
 import dataJson from "./data.json";
 
 interface ScomRandomizerElement extends ControlElement {
+  lazyLoad?: boolean;
   releaseUTCTime?: string;
   numberOfValues?: number;
   from?: number;
@@ -59,17 +60,20 @@ export default class ScomRandomizer extends Module {
     this.isReadyCallbackQueued = true;
     super.init();
     this.initTag();
-    this._data.releaseUTCTime = this.getAttribute('releaseUTCTime', true);
-    this._data.numberOfValues = this.getAttribute('numberOfValues', true);
-    this._data.from = this.getAttribute('from', true);
-    this._data.to = this.getAttribute('to', true);
-    this._data.showHeader = this.getAttribute('showHeader', true);
-    this._data.showFooter = this.getAttribute('showFooter', true);
-    this.setReleaseTime();
-    if (!this._data.round && this._data.releaseTime) {
-      this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
+    const lazyLoad = this.getAttribute('lazyLoad', true, false);
+    if (!lazyLoad) {
+      this._data.releaseUTCTime = this.getAttribute('releaseUTCTime', true);
+      this._data.numberOfValues = this.getAttribute('numberOfValues', true);
+      this._data.from = this.getAttribute('from', true);
+      this._data.to = this.getAttribute('to', true);
+      this._data.showHeader = this.getAttribute('showHeader', true);
+      this._data.showFooter = this.getAttribute('showFooter', true);
+      this.setReleaseTime();
+      if (!this._data.round && this._data.releaseTime) {
+        this._data.round = await getRoundByReleaseTime(Number(this._data.releaseTime));
+      }
+      await this.refreshApp();
     }
-    await this.refreshApp();
     this.isReadyCallbackQueued = false;
     this.executeReadyCallback();
   }

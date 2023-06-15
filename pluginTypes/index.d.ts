@@ -45,6 +45,7 @@ declare module "@scom/scom-randomizer" {
     import { IConfig } from "@scom/scom-randomizer/interface.ts";
     import "@scom/scom-randomizer/index.css.ts";
     interface ScomRandomizerElement extends ControlElement {
+        lazyLoad?: boolean;
         releaseUTCTime?: string;
         numberOfValues?: number;
         from?: number;
