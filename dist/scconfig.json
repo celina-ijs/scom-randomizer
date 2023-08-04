@@ -1,0 +1,11 @@
+{
+    "name": "@scom/scom-randomizer",
+    "type": "widget",
+    "version": "0.1.6",
+    "dependencies": [
+        "@ijstech/components",
+        "@ijstech/eth-contract",
+        "@ijstech/eth-wallet",
+        "@scom/scom-dapp-container"
+    ]
+}
