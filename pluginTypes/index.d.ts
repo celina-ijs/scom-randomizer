@@ -39,9 +39,117 @@ declare module "@scom/scom-randomizer/data.json.ts" {
     };
     export default _default;
 }
+/// <amd-module name="@scom/scom-randomizer/formSchema.json.ts" />
+declare module "@scom/scom-randomizer/formSchema.json.ts" {
+    const _default_1: {
+        dataSchema: {
+            type: string;
+            properties: {
+                releaseUTCTime: {
+                    title: string;
+                    type: string;
+                    format: string;
+                };
+                numberOfValues: {
+                    type: string;
+                };
+                from: {
+                    type: string;
+                };
+                to: {
+                    type: string;
+                };
+                dark: {
+                    type: string;
+                    properties: {
+                        backgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        fontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        winningNumberBackgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        winningNumberFontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        roundNumberFontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        nextDrawFontColor: {
+                            type: string;
+                            format: string;
+                        };
+                    };
+                };
+                light: {
+                    type: string;
+                    properties: {
+                        backgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        fontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        winningNumberBackgroundColor: {
+                            type: string;
+                            format: string;
+                        };
+                        winningNumberFontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        roundNumberFontColor: {
+                            type: string;
+                            format: string;
+                        };
+                        nextDrawFontColor: {
+                            type: string;
+                            format: string;
+                        };
+                    };
+                };
+            };
+        };
+        uiSchema: {
+            type: string;
+            elements: ({
+                type: string;
+                label: string;
+                elements: {
+                    type: string;
+                    elements: {
+                        type: string;
+                        scope: string;
+                    }[];
+                }[];
+            } | {
+                type: string;
+                label: string;
+                elements: {
+                    type: string;
+                    elements: {
+                        type: string;
+                        label: string;
+                        scope: string;
+                    }[];
+                }[];
+            })[];
+        };
+    };
+    export default _default_1;
+}
 /// <amd-module name="@scom/scom-randomizer" />
 declare module "@scom/scom-randomizer" {
-    import { Module, ControlElement, Container, IDataSchema } from "@ijstech/components";
+    import { Module, ControlElement, Container } from "@ijstech/components";
     import { IConfig } from "@scom/scom-randomizer/interface.ts";
     import "@scom/scom-randomizer/index.css.ts";
     interface ScomRandomizerElement extends ControlElement {
@@ -99,8 +207,6 @@ declare module "@scom/scom-randomizer" {
         private setTag;
         private updateStyle;
         private updateTheme;
-        private getPropertiesSchema;
-        private getThemeSchema;
         getConfigurators(): ({
             name: string;
             target: string;
@@ -109,10 +215,111 @@ declare module "@scom/scom-randomizer" {
                 icon: string;
                 command: (builder: any, userInputData: any) => {
                     execute: () => Promise<void>;
-                    undo: () => void;
+                    undo: () => Promise<void>;
                     redo: () => void;
                 };
-                userInputDataSchema: IDataSchema;
+                userInputDataSchema: {
+                    type: string;
+                    properties: {
+                        releaseUTCTime: {
+                            title: string;
+                            type: string;
+                            format: string;
+                        };
+                        numberOfValues: {
+                            type: string;
+                        };
+                        from: {
+                            type: string;
+                        };
+                        to: {
+                            type: string;
+                        };
+                        dark: {
+                            type: string;
+                            properties: {
+                                backgroundColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                fontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                winningNumberBackgroundColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                winningNumberFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                roundNumberFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                nextDrawFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                            };
+                        };
+                        light: {
+                            type: string;
+                            properties: {
+                                backgroundColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                fontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                winningNumberBackgroundColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                winningNumberFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                roundNumberFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                nextDrawFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                userInputUISchema: {
+                    type: string;
+                    elements: ({
+                        type: string;
+                        label: string;
+                        elements: {
+                            type: string;
+                            elements: {
+                                type: string;
+                                scope: string;
+                            }[];
+                        }[];
+                    } | {
+                        type: string;
+                        label: string;
+                        elements: {
+                            type: string;
+                            elements: {
+                                type: string;
+                                label: string;
+                                scope: string;
+                            }[];
+                        }[];
+                    })[];
+                };
             }[];
             getData: any;
             setData: (data: IConfig) => Promise<void>;
@@ -128,10 +335,111 @@ declare module "@scom/scom-randomizer" {
                 icon: string;
                 command: (builder: any, userInputData: any) => {
                     execute: () => Promise<void>;
-                    undo: () => void;
+                    undo: () => Promise<void>;
                     redo: () => void;
                 };
-                userInputDataSchema: IDataSchema;
+                userInputDataSchema: {
+                    type: string;
+                    properties: {
+                        releaseUTCTime: {
+                            title: string;
+                            type: string;
+                            format: string;
+                        };
+                        numberOfValues: {
+                            type: string;
+                        };
+                        from: {
+                            type: string;
+                        };
+                        to: {
+                            type: string;
+                        };
+                        dark: {
+                            type: string;
+                            properties: {
+                                backgroundColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                fontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                winningNumberBackgroundColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                winningNumberFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                roundNumberFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                nextDrawFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                            };
+                        };
+                        light: {
+                            type: string;
+                            properties: {
+                                backgroundColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                fontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                winningNumberBackgroundColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                winningNumberFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                roundNumberFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                                nextDrawFontColor: {
+                                    type: string;
+                                    format: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                userInputUISchema: {
+                    type: string;
+                    elements: ({
+                        type: string;
+                        label: string;
+                        elements: {
+                            type: string;
+                            elements: {
+                                type: string;
+                                scope: string;
+                            }[];
+                        }[];
+                    } | {
+                        type: string;
+                        label: string;
+                        elements: {
+                            type: string;
+                            elements: {
+                                type: string;
+                                label: string;
+                                scope: string;
+                            }[];
+                        }[];
+                    })[];
+                };
             }[];
             getLinkParams: () => {
                 data: string;
